@@ -27,8 +27,8 @@ export default {
                 return this.$store.commit("selectTask", item);
             } else if (!this.isStatistics) {
                 return this.$store.commit("selectNote", item);
-            } else {
-                return this.$store.commit("selectNote", item);
+            } else if (this.isStatistics){
+                return this.$store.commit("selectStatistic", item);
             }
         },
         getItemValues(item) {

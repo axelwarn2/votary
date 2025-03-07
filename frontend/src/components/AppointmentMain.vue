@@ -4,11 +4,12 @@ import RecordButton from "./steps/RecordButton.vue";
 import RecordLists from "./steps/RecordLists.vue";
 import RecordNotesDetail from "./steps/RecordNotesDetail.vue";
 import RecordTasksDetail from "./steps/RecordTasksDetail.vue";
+import RecordStatisticDetail from "./steps/RecordStatisticDetail.vue";
 import { mapState } from "vuex";
 
 export default {
     name: "AppointmentMain",
-    components: { RecordButton, RecordLists, RecordNotesDetail, RecordTasksDetail },
+    components: { RecordButton, RecordLists, RecordNotesDetail, RecordTasksDetail, RecordStatisticDetail },
     computed: {
         ...mapState(["currentView", "notesData", "taskData", "statisticsData"]),
         currentItems() {
@@ -28,7 +29,7 @@ export default {
 </script>
 
 <template>
-    <div class="votary-content">
+    <div class="votary-content" :class="{'scroll' : currentView === 'RecordStatisticDetail'}">
         <RecordButton v-if="currentView === 'RecordButton'"/>
         <RecordLists
             v-if="currentView === 'RecordNotes' || currentView === 'RecordTasks' || currentView === 'RecordStatistics'"
@@ -38,5 +39,6 @@ export default {
         />
         <RecordNotesDetail v-if="currentView === 'RecordNotesDetail'"/>
         <RecordTasksDetail v-if="currentView === 'RecordTasksDetail'"/>
+        <RecordStatisticDetail v-if="currentView === 'RecordStatisticDetail'"/>
     </div>
 </template>
