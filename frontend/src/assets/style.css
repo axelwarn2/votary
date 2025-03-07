@@ -31,6 +31,7 @@ body {
     flex-direction: row;
     align-items: center;
     gap: 4px;
+    cursor: pointer;
 }
 
 .logo__image {
@@ -48,14 +49,20 @@ body {
 .left-panel__list {
     display: flex;
     flex-direction: column;
-    gap: 22px;
-    width: 80%;
+    gap: 18px;
+    width: 90%;
 }
 
 .left-panel__item {
     display: flex;
     gap: 6px;
     align-items: center;
+    padding: 4px 0 4px 4px;
+}
+
+.isActive {
+    border-radius: 8px;
+    background-color: rgba(235, 235, 245, 0.1);
 }
 
 .left-panel__item-image--record, .left-panel__item-image--note,
@@ -80,6 +87,9 @@ body {
     color: #FFFFFF;
     font-size: 20px;
     font-weight: 400;
+    background-color: rgba(28,28,28,0);
+    border: 0;
+    cursor: pointer;
 }
 
 .votary-main {
@@ -107,6 +117,7 @@ body {
     height: 160px;
     border-radius: 50%;
     border: 0;
+    cursor: pointer;
 }
 
 .record-button__button--on {
@@ -159,36 +170,6 @@ body {
     padding: 15px 38px 15px 18px;
 }
 
-.record-notes__header-item:nth-child(1),
-.record-notes__item-text:nth-child(1) {
-    width: 42%;
-    min-width: 0;
-}
-
-.record-notes__header-item:nth-child(2),
-.record-notes__item-text:nth-child(2) {
-    width: 30%;
-    min-width: 0;
-    position: relative;
-    padding-left: 15px;
-}
-
-.record-notes__header-item:nth-child(2)::before,
-.record-notes__header-item:last-child::before {
-    content: "|";
-    color: #2C2C2C;
-    position: absolute;
-    left: 5px;
-}
-
-.record-notes__header-item:last-child,
-.record-notes__item-text:last-child {
-    flex: 0 0 auto;
-    margin-left: auto;
-    position: relative;
-    padding-left: 15px;
-}
-
 .record-notes__item:nth-child(odd) {
     background-color: #232222;
 }
@@ -197,12 +178,34 @@ body {
     color: #8B8B8B;
     font-size: 16px;
     font-weight: 100;
+    position: relative;
 }
 
 .record-notes__item-text {
     color: #FFFFFF;
     font-size: 20px;
     font-weight: 100;
+    text-align: left;
+    position: relative;
+    padding-left: 0;
+}
+
+.record-notes__header-item,
+.record-notes__item-text {
+    flex: 1;
+    text-align: left;
+}
+
+.record-notes__header-item:not(:first-child)::before {
+    content: "|";
+    color: #2C2C2C;
+    position: absolute;
+    left: 0;
+    transform: translateX(-14px);
+}
+
+.last-column {
+    text-align: right;
 }
 
 .record-notes-detail__content {
