@@ -61,7 +61,12 @@ export default createStore({
             state.selectedTask = task;
             state.viewHistory.push(state.currentView);
             state.currentView = 'RecordTasksDetail';
-        }
+        },
+        selectStatistic(state, statistic) {
+            state.selectedStatistic   = statistic;
+            state.viewHistory.push(state.currentView);
+            state.currentView = 'RecordStatisticDetail';
+        },
     },
     actions: {
         showMeetings({ commit }) {
