@@ -22,7 +22,7 @@ export default createStore({
             items: [
                 { id: "Задача №12398", name: "Пятков Константин", create: "01.01.2025", deadline: "01.02.2025" },
                 { id: "Задача №12748", name: "Кашин Александр", create: "01.01.2025", deadline: "02.02.2025" },
-                { id: "Задача №83253", name: "Матвеев Даниил", create: "01.01.2025", deadline: "03.02.2025" }
+                { id: "Задача №83253", name: "Матвеев Даниил", create: "01.01.2025", deadline: "03.02.2025" },
             ]
         },
         statisticsData: {
@@ -31,7 +31,7 @@ export default createStore({
             items: [
                 { employee: "Пятков Константин", count_task: "3", complete: "2", expired: "1", efficiency: "66%" },
                 { employee: "Кашин Александр", count_task: "5", complete: "5", expired: "2", efficiency: "70%" },
-                { employee: "Матвеев Даниил", count_task: "2", complete: "1", expired: "0", efficiency: "100%" }
+                { employee: "Матвеев Даниил", count_task: "2", complete: "1", expired: "0", efficiency: "100%" },
             ]
         }
     },

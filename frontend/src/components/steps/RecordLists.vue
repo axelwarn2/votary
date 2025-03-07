@@ -19,7 +19,7 @@ export default {
             if (this.isTasks) return this.taskData.title;
             if (this.isStatistics) return this.statisticsData.title;
             return this.notesData.title;
-        }
+        },
     },
     methods: {
         selectItem(item) {
@@ -52,7 +52,7 @@ export default {
                 <p
                     v-for="(header, index) in headers"
                     :key="index"
-                    :class="['record-notes__header-item', { 'last-column': index === headers.length - 1 }]"
+                    class="record-notes__header-item"
                 >
                     {{ header }}
                 </p>
@@ -61,13 +61,13 @@ export default {
                 <div
                     v-for="(item, index) in items"
                     :key="index"
-                    :class="['record-notes__item', { 'odd': index % 2 !== 0 }]"
+                    class="record-notes__item"
                     @click="selectItem(item)"
                 >
                     <p
                         v-for="(value, index) in getItemValues(item)"
                         :key="index"
-                        :class="['record-notes__item-text', { 'last-column': index === headers.length - 1 }]"
+                        class="record-notes__item-text"
                     >
                         {{ value }}
                     </p>
