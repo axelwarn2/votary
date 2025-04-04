@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+const events = require("node:events");
 
 let win;
 let pythonProcess;
@@ -33,23 +34,34 @@ app.whenReady().then(() => {
     });
 });
 
-ipcMain.on('calculate-sum', (event, { num1, num2 }) => {
-    pythonProcess.stdin.write(`sum:${num1},${num2}\n`);
-    pythonProcess.stdin.flush;
+ipcMain.handle('get-meeting-data', async (event, meetingId) => {
+    return new Promise((resolve) => {
+        pythonProcess.stdin.write(`get_meeting:${meetingId}\n`);
+
+        pythonProcess.stdout.once('data', (data) => {
+            resolve(data.toString().trim());
+        });
+    });
 });
 
-ipcMain.on('calculate-subtraction', (event, { num1, num2 }) => {
-    pythonProcess.stdin.write(`subtraction:${num1},${num2}\n`);
+ipcMain.handle('get-task-data', async (event, taskId) => {
+    return new Promise((resolve) => {
+        pythonProcess.stdin.write(`get_task:${taskId}\n`);
+
+        pythonProcess.stdout.once('data', (data) => {
+            resolve(data.toString().trim());
+        });
+    });
 });
 
-ipcMain.on('calculate-proizvedenie', (event, { num1, num2 }) => {
-    pythonProcess.stdin.write(`proizvedenie:${num1}, ${num2}\n`);
-    pythonProcess.stdin.flush;
-});
+ipcMain.handle('get-statistic-data', async (event, employee) => {
+    return new Promise((resolve) => {
+        pythonProcess.stdin.write(`get_statistic:${employee}\n`);
 
-ipcMain.on('calculate-division', (event, { num1, num2 }) => {
-    pythonProcess.stdin.write(`division:${num1},${num2}\n`);
-    pythonProcess.stdin.flush;
+        pythonProcess.stdout.once('data', (data) => {
+            resolve(data.toString().trim());
+        });
+    });
 });
 
 app.on('window-all-closed', () => {

@@ -12,10 +12,10 @@ export default {
 
 <template>
     <div class="votary-app">
-        <LeftBorder />
+        <LeftBorder/>
 
         <main class="votary-main">
-            <AppointmentMain />
+            <router-view/>
         </main>
     </div>
 </template>
