@@ -83,4 +83,9 @@ export default {
             </div>
         </div>
     </div>
+    <div class="record-button__add-employee" v-if="this.isStatistics">
+        <router-link to="/add-employee-link" class="record-button__add-employee--link">
+            <button class="button__add-employee">Добавить сотрудника</button>
+        </router-link>
+    </div>
 </template>

@@ -7,6 +7,8 @@ import RecordLists from "./components/steps/records/RecordLists.vue";
 import RecordNotesDetail from "./components/steps/records/RecordNotesDetail.vue";
 import RecordTasksDetail from "./components/steps/records/RecordTasksDetail.vue";
 import RecordStatisticDetail from "./components/steps/records/RecordStatisticDetail.vue";
+import FormAddEmployeeLink from "./components/steps/forms-add/FormAddEmployeeLink.vue";
+import FormAddEmployee from "./components/steps/forms-add/FormAddEmployee.vue";
 
 const routes = [
     {
@@ -64,6 +66,16 @@ const routes = [
         name: 'RecordStatisticDetail',
         component: RecordStatisticDetail,
         props: true,
+    },
+    {
+        path: '/add-employee-link',
+        name: 'FormAddEmployeeLink',
+        component: FormAddEmployeeLink,
+    },
+    {
+        path: '/add-employee',
+        name: 'FormAddEmployee',
+        component: FormAddEmployee,
     },
 ];
 
