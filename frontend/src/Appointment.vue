@@ -1,11 +1,11 @@
 <script>
 import LeftBorder from "./components/LeftBorder.vue";
-import AppointmentMain from "./components/AppointmentMain.vue";
+import Header from "./components/Header.vue";
 
 export default {
     components: {
+        Header,
         LeftBorder,
-        AppointmentMain
     },
 }
 </script>
@@ -15,6 +15,7 @@ export default {
         <LeftBorder/>
 
         <main class="votary-main">
+            <Header />
             <router-view/>
         </main>
     </div>
