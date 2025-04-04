@@ -101,6 +101,86 @@ body {
     height: 100%;
 }
 
+.form {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.form__container {
+    height: 100%;
+    width: 35%;
+    max-width: 362px;
+    display: flex;
+    flex-direction: column;
+    padding-top: 70px;
+    gap: 32px;
+}
+
+.form__title {
+    font-size: 28px;
+    font-weight: 100;
+    color: #FFFFFF;
+    text-align: center;
+}
+
+.form__container--gap {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form__element {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.form__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form__field-title {
+    font-size: 18px;
+    font-weight: 100;
+    color: #FFFFFF;
+}
+
+.form__input {
+    font-size: 18px;
+    padding: 14px 12px;
+    color: #FFFFFF;
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 5px;
+    border: 1px solid #FFFFFF;
+}
+
+.form__submit {
+    width: 100%;
+    padding: 13px 0;
+    font-size: 18px;
+    color: #FFFFFF;
+    background-color: #0059AC;
+    border-radius: 20px;
+    border: none;
+}
+
+.form__text, .form__link {
+    color: #FFFFFF;
+    font-size: 18px;
+    text-align: center;
+}
+
 .record-button {
     display: flex;
     flex-direction: column;

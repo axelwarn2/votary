@@ -1,11 +1,29 @@
 import { createRouter, createWebHistory} from "vue-router";
-import RecordButton from "./components/steps/RecordButton.vue";
-import RecordLists from "./components/steps/RecordLists.vue";
-import RecordNotesDetail from "./components/steps/RecordNotesDetail.vue";
-import RecordTasksDetail from "./components/steps/RecordTasksDetail.vue";
-import RecordStatisticDetail from "./components/steps/RecordStatisticDetail.vue";
+import FormLogin from "./components/steps/forms-login/FormLogin.vue";
+import FormRegistration from "./components/steps/forms-login/FormRegistration.vue";
+import FormRecoverPassword from "./components/steps/forms-login/FormRecoverPassword.vue";
+import RecordButton from "./components/steps/records/RecordButton.vue";
+import RecordLists from "./components/steps/records/RecordLists.vue";
+import RecordNotesDetail from "./components/steps/records/RecordNotesDetail.vue";
+import RecordTasksDetail from "./components/steps/records/RecordTasksDetail.vue";
+import RecordStatisticDetail from "./components/steps/records/RecordStatisticDetail.vue";
 
 const routes = [
+    {
+        path: '/login',
+        name: 'Login',
+        component: FormLogin,
+    },
+    {
+        path: '/registration',
+        name: 'Registration',
+        component: FormRegistration,
+    },
+    {
+        path: '/recover-password',
+        name: 'FormRecoverPassword',
+        component: FormRecoverPassword,
+    },
     {
         path: '/',
         name: 'Home',
