@@ -6,13 +6,17 @@ export const validateForm = (formData, fieldConfig) => {
         const config = fieldConfig[field];
 
         if (config.required && !value) {
-            errors[field] = 'Поле обязательно к заполнению';
+            errors[field] = `Поле "${config.label}" обязательно к заполнению`;
             return;
         }
 
         if (config.minLength && value.length < config.minLength) {
-            errors[field] = `Поле должно содержать не менее ${config.minLength} символов`;
+            errors[field] = `Поле "${config.label}" должно содержать не менее ${config.minLength} символов`;
             return;
+        }
+
+        if (config.maxLength && value.length > config.maxLength) {
+            errors[field] = `Поле "${config.label}" должно содержать не более ${config.maxLength} символов`;
         }
 
         if (config.isEmail && value && !value.includes('@')) {
@@ -21,7 +25,7 @@ export const validateForm = (formData, fieldConfig) => {
         }
 
         if (config.matchWith && formData[config.matchWith] && value !== formData[config.matchWith].trim()) {
-            errors[field] = 'Поля не совпадают';
+            errors[field] = 'Пароли не совпадают';
             return;
         }
     });
