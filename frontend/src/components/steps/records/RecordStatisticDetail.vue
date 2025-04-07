@@ -5,7 +5,15 @@
         <div class="efficiency-stats">
             <div class="efficiency-stats__overview">
                 <h3 class="efficiency-stats__overview-title">Эффективность</h3>
-                <div class="efficiency-stats__image"></div>
+                <div class="efficiency-stats__circle-container">
+                    <div class="efficiency-stats__circle--first">
+                        <div class="efficiency-stats__circle--second">
+                            <div class="efficiency-stats__circle--third">
+                                66%
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="efficiency-stats__in-progress">
                 <h3 class="efficiency-stats__in-progress-title">Всего в работе</h3>

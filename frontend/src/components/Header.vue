@@ -46,5 +46,4 @@ export default {
 .header-button--register {
     background-color: #0059AC;
 }
-
 </style>
