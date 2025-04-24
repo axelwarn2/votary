@@ -1,3 +1,6 @@
 node_modules
 .idea
 package-lock.json
+.env
+src/app/backend/__pycache__
+src/app/backend/venv
