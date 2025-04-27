@@ -1,26 +1,27 @@
 <script setup>
 import { computed, ref, watch } from "vue";
+import axios from "axios";
 import { validateForm } from "../../../assets/validation.js";
 
 const formData = ref({
     email: '',
-    lastname: '',
+    surname: '',
     name: '',
-    patronymic: '',
+    lastname: '',
 });
 
 const errors = ref({
     email: '',
-    lastname: '',
+    surname: '',
     name: '',
-    patronymic: '',
+    lastname: '',
 });
 
 const fieldsConfig = {
     email: { required: true, isEmail: true, label: "Email" },
-    lastname: { required: true, minLength: 2, maxLength: 35, label: "Фамилия" },
+    surname: { required: true, minLength: 2, maxLength: 35, label: "Фамилия" },
     name: { required: true, minLength: 2, maxLength: 35, label: "Имя" },
-    patronymic: { required: true, minLength: 2, maxLength: 35, label: "Отчество" },
+    lastname: { required: true, minLength: 2, maxLength: 35, label: "Отчество" },
 };
 
 const isFormSubmit = ref(false);
@@ -37,14 +38,38 @@ const hasError = computed(() => {
    return Object.values(errors.value).some(error => error !== '');
 });
 
-const addEmployee = () => {
+const addEmployee = async () => {
     validatesForm();
     isFormSubmit.value = true;
 
     if (hasError.value) {
         return;
     }
+
+    try {
+        const response = await axios.post("http://localhost:8000/employee/", {
+            surname: formData.value.surname,
+            name: formData.value.name,
+            lastname: formData.value.lastname,
+            email: formData.value.email,
+            password: "qwerty123!",
+            role: "исполнитель"
+        });
+
+        formData.value = {
+            email: '',
+            lastname: '',
+            name: '',
+            patronymic: '',
+        };
+        isFormSubmit.value = false;
+
+    } catch (error) {
+        console.error("Ошибка при добавлении сотрудника:", error);
+        alert("Ошибка при добавлении сотрудника!");
+    }
 };
+
 </script>
 
 <template>
@@ -63,8 +88,8 @@ const addEmployee = () => {
 
                         <div class="form__field">
                             <h3 class="form__field-title">Фамилия</h3>
-                            <input class="form__input" :class="{'form__input--error': errors.lastname}" type="text" v-model="formData.lastname"/>
-                            <p class="form__error" v-if="errors.lastname">{{ errors.lastname }}</p>
+                            <input class="form__input" :class="{'form__input--error': errors.surname}" type="text" v-model="formData.surname"/>
+                            <p class="form__error" v-if="errors.surname">{{ errors.surname }}</p>
                         </div>
 
                         <div class="form__field">
@@ -75,8 +100,8 @@ const addEmployee = () => {
 
                         <div class="form__field">
                             <h3 class="form__field-title">Отчество</h3>
-                            <input class="form__input" :class="{'form__input--error': errors.patronymic}" type="text" v-model="formData.patronymic"/>
-                            <p class="form__error" v-if="errors.patronymic">{{ errors.patronymic }}</p>
+                            <input class="form__input" :class="{'form__input--error': errors.patronymic}" type="text" v-model="formData.lastname"/>
+                            <p class="form__error" v-if="errors.lastname">{{ errors.lastname }}</p>
                         </div>
                     </div>
 

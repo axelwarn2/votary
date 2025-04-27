@@ -1,6 +1,7 @@
 # backend/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from backend.routes import employee
 
 app = FastAPI()
 
@@ -13,6 +14,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-def hello():
-    return {"message": "hello"}
+app.include_router(employee.router)
