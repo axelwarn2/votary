@@ -100,7 +100,7 @@ const addEmployee = async () => {
 
                         <div class="form__field">
                             <h3 class="form__field-title">Отчество</h3>
-                            <input class="form__input" :class="{'form__input--error': errors.patronymic}" type="text" v-model="formData.lastname"/>
+                            <input class="form__input" :class="{'form__input--error': errors.lastname}" type="text" v-model="formData.lastname"/>
                             <p class="form__error" v-if="errors.lastname">{{ errors.lastname }}</p>
                         </div>
                     </div>

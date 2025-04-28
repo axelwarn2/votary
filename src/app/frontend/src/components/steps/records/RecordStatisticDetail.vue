@@ -27,9 +27,6 @@
                 <h3 class="efficiency-stats__overdue-title">Просрочено</h3>
                 <p class="efficiency-stats__overdue-value">1</p>
             </div>
-            <div class="efficiency-stats__chart">
-                <div class="grap__image"></div>
-            </div>
         </div>
     </div>
 </template>
