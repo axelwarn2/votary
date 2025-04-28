@@ -1,12 +1,24 @@
-<script>
-export default {
-    name: 'RecordNotesDetail',
-};
+<script setup>
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import axios from 'axios';
+
+const route = useRoute();
+const meeting = ref([]);
+onMounted(async () => {
+    try {
+        const response = await axios.get(`http://localhost:8000/meetings/${route.params.id}`);
+        meeting.value = response.data;
+        console.log(meeting.value)
+    } catch (error) {
+        console.error('Ошибка получения детальной информации собрания:', error);
+    }
+});
 </script>
 
 <template>
     <div class="record-notes-detail">
-        <h3 class="record-notes-detail__title">Собрание №12398</h3>
+        <h3 class="record-notes-detail__title">Собрание № {{ meeting.id }}</h3>
         <div class="record-notes-detail__content">
             <div class="record-notes-detail__section record-notes-detail__section--key-points">
                 <p class="record-notes-detail__section-title">Ключевые моменты</p>
@@ -14,19 +26,7 @@ export default {
 
             <div class="record-notes-detail__section record-notes-detail__section--text">
                 <p class="record-notes-detail__text">
-                    Коллеги, доброе утро. Сегодня мы собрались, чтобы обсудить наши дальнейшие шаги по развитию
-                    компании. Как вы знаете, последние несколько лет мы демонстрируем устойчивый рост, и нам необходимо
-                    поддерживать эту динамику.
-                    Первое и самое важное: наша главная цель – укрепление позиций на рынке. Для этого каждый из вас
-                    должен стать амбассадором нашей компании. В связи с этим, предлагаю всем отделам подготовить проекты
-                    для участия в предстоящей крупной IT-конференции. Это отличная возможность представить наши
-                    инновационные решения и привлечь новых клиентов.
-                    Второе: инвестиции в обучение и развитие. Мы запускаем программу повышения квалификации для всех
-                    сотрудников. Уверен, что это поможет вам освоить новые навыки и повысить свою эффективность.
-                    Третье: оптимизация рабочих процессов. Мы внедрили новую систему управления проектами, которая
-                    позволит нам более эффективно координировать работу и сократить время выполнения задач.
-                    Наконец, я хочу подчеркнуть важность командной работы. Только вместе мы сможем достичь поставленных
-                    целей. Спасибо за вашу преданность и усердие.
+                    {{ meeting.text }}
                 </p>
             </div>
 

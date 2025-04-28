@@ -75,7 +75,7 @@ function calculateDuration(start, end) {
         const startTime = new Date(`1970-01-01T${start}Z`);
         const endTime = new Date(`1970-01-01T${end}Z`);
         const diffMs = endTime - startTime;
-        
+
         if (isNaN(diffMs)) return '0:00';
 
         const hours = Math.floor(diffMs / (1000 * 60 * 60));
