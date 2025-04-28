@@ -10,11 +10,7 @@ export default createStore({
         notesData: {
             title: "Записи собраний",
             headers: ["Номер собрания", "Дата собрания", "Длительность"],
-            items: [
-                {id: 12398, date: "01.01.2025", duration: "58:32"},
-                {id: 12748, date: "02.01.2025", duration: "08:11"},
-                {id: 12399, date: "03.01.2025", duration: "60:00"},
-            ]
+            items: [],
         },
         taskData: {
             title: "Задачи",
@@ -50,6 +46,9 @@ export default createStore({
             state.selectedStatistic = statistic;
             state.viewHistory.push(state.currentView);
             state.currentView = 'RecordStatisticDetail';
+        },
+        setMeetings(state, meetings) {
+            state.notesData.items = meetings;
         },
     },
 });
