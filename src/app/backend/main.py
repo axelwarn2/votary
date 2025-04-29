@@ -1,7 +1,7 @@
 # backend/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routes import employee, meeting
+from backend.routes import employee, meeting, task
 
 app = FastAPI()
 
@@ -16,3 +16,4 @@ app.add_middleware(
 
 app.include_router(employee.router)
 app.include_router(meeting.router)
+app.include_router(task.router)

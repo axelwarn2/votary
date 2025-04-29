@@ -13,13 +13,19 @@ const store = useStore();
 const router = useRouter();
 
 const meetings = ref([]);
+const tasks = ref([]);
 
 onMounted(async () => {
     if (!props.isTasks && !props.isStatistics) {
         try {
-        const response = await axios.get('http://localhost:8000/meetings');
-        meetings.value = response.data;
-        store.commit('setMeetings', response.data);
+        const responseMeetings = await axios.get('http://localhost:8000/meetings');
+        const responeTasks = await axios.get('http://localhost:8000/tasks');
+
+        meetings.value = responseMeetings.data;
+        tasks.value = responeTasks.data;
+
+        store.commit('setMeetings', responseMeetings.data);
+        store.commit('setTasks', responeTasks.data);
     } catch (error) {
         console.error('Ошибка при получении встреч:', error);
     }
@@ -61,7 +67,11 @@ const getItemValues = (item) => {
     if (props.isStatistics) {
         return [item.employee, item.count_task, item.complete, item.expired, item.efficiency];
     } else if (props.isTasks) {
-        return [item.id, item.name, item.create, item.deadline];
+        const date_created = item.date_created ? new Date(item.date_created).toLocaleDateString('ru-RU') : 'N/A';
+        const deadline = item.deadline ? new Date(item.deadline).toLocaleDateString('ru-RU') : 'N/A';
+        const name = `${item.employee_surname} ${item.employee_name}`;
+
+        return [item.id, name, date_created, deadline];
     } else {
         const date = item.date_event ? new Date(item.date_event).toLocaleDateString('ru-RU') : 'N/A';
         const duration = item.time_start && item.time_end ? calculateDuration(item.time_start, item.time_end) : '0:00';

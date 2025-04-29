@@ -329,6 +329,7 @@ html, body, #app {
     background-color: #232222;
     position: relative;
     max-height: 554px;
+    min-width: 70%;
 }
 
 .record-notes-detail__section {

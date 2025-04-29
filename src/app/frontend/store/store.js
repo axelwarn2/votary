@@ -15,11 +15,7 @@ export default createStore({
         taskData: {
             title: "Задачи",
             headers: ["Номер  задачи", "Исполнитель", "Дата создания", "Крайний срок"],
-            items: [
-                {id: 12395, name: "Пятков Константин", create: "01.01.2025", deadline: "01.02.2025"},
-                {id: 12745, name: "Кашин Александр", create: "01.01.2025", deadline: "02.02.2025"},
-                {id: 83255, name: "Матвеев Даниил", create: "01.01.2025", deadline: "03.02.2025"},
-            ]
+            items: []
         },
         statisticsData: {
             title: "Статистика задач",
@@ -50,5 +46,8 @@ export default createStore({
         setMeetings(state, meetings) {
             state.notesData.items = meetings;
         },
+        setTasks(state, tasks) {
+            state.taskData.items = tasks;
+        }
     },
 });
