@@ -20,11 +20,7 @@ export default createStore({
         statisticsData: {
             title: "Статистика задач",
             headers: ["Сотрудник", "Количество задач", "Завершено", "Просрочено", "Эффективность"],
-            items: [
-                {id: 1, employee: "Пятков Константин", count_task: "3", complete: "2", expired: "1", efficiency: "66%"},
-                {id: 2, employee: "Кашин Александр", count_task: "5", complete: "5", expired: "2", efficiency: "70%"},
-                {id: 3, employee: "Матвеев Даниил", count_task: "2", complete: "1", expired: "0", efficiency: "100%"},
-            ]
+            items: []
         }
     },
     mutations: {
@@ -48,6 +44,9 @@ export default createStore({
         },
         setTasks(state, tasks) {
             state.taskData.items = tasks;
+        },
+        setStatistics(state, statistics) {
+            state.statisticsData.items = statistics
         }
     },
 });

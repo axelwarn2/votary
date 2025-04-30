@@ -14,18 +14,22 @@ const router = useRouter();
 
 const meetings = ref([]);
 const tasks = ref([]);
+const statistics = ref([]);
 
 onMounted(async () => {
     if (!props.isTasks && !props.isStatistics) {
         try {
         const responseMeetings = await axios.get('http://localhost:8000/meetings');
         const responeTasks = await axios.get('http://localhost:8000/tasks');
+        const responseStatistics = await axios.get('http://localhost:8000/employees');
 
         meetings.value = responseMeetings.data;
         tasks.value = responeTasks.data;
+        statistics.value = responseStatistics.data;
 
         store.commit('setMeetings', responseMeetings.data);
         store.commit('setTasks', responeTasks.data);
+        store.commit('setStatistics', responseStatistics.data);
     } catch (error) {
         console.error('Ошибка при получении встреч:', error);
     }
@@ -65,7 +69,8 @@ const selectItem = (item) => {
 
 const getItemValues = (item) => {
     if (props.isStatistics) {
-        return [item.employee, item.count_task, item.complete, item.expired, item.efficiency];
+        const name = `${item.surname} ${item.name}`;
+        return [name, item.count_task, item.complete, item.expired, item.efficiency];
     } else if (props.isTasks) {
         const date_created = item.date_created ? new Date(item.date_created).toLocaleDateString('ru-RU') : 'N/A';
         const deadline = item.deadline ? new Date(item.deadline).toLocaleDateString('ru-RU') : 'N/A';
