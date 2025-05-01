@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, Cookie, status
 from sqlalchemy.orm import Session
 from backend.models.EmployeeModel import EmployeeModel
-from backend.schemas.EmployeeSchem import EmployeeCreate, EmployeeStats
+from backend.schemas.EmployeeSchem import EmployeeCreate, EmployeeStats, EmployeeLogin
 from backend.utlis.db import get_db
 from backend.models.TaskModel import TaskModel, StatusEnum
 from sqlalchemy import select, func, case
 from datetime import datetime
 import random
+from backend.utlis.session import create_session, get_session, delete_session
+from typing import Optional
 
 router = APIRouter()
 
@@ -84,3 +86,50 @@ def get_employee_by_id(employee_id: int, db: Session = Depends(get_db)):
         "expired": result.expired,
         "efficiency": f"{random.randint(10, 100)}%"
     }
+
+@router.post("/login")
+def login_employee(login_data: EmployeeLogin, response: Response, db: Session = Depends(get_db)):
+    employee = db.query(EmployeeModel).filter(EmployeeModel.email == login_data.email).first()
+
+    session_id = create_session({
+        "id": employee.id,
+        "surname": employee.surname,
+        "name": employee.name,
+        "lastname": employee.lastname,
+        "email": employee.email,
+        "role": employee.role
+    })
+
+    response.set_cookie(
+        key = "session_id",
+        value = session_id,
+        httponly = True,
+        secure = False,
+        samesite = "lax",
+        max_age = 1800
+    )
+
+    return {
+        "message": "Успешный вход",
+        "employee": {
+            "id": employee.id,
+            "surname": employee.surname,
+            "name": employee.name,
+            "lastname": employee.lastname,
+            "email": employee.email,
+            "role": employee.role
+        }
+    }
+
+@router.get("/me")
+def get_current_user(session_id: Optional[str] = Cookie(None)):
+    session = get_session(session_id)
+    return session["employee"]
+
+@router.post("/logout")
+def logout(response: Response, session_id: Optional[str] = Cookie(None)):
+    if session_id:
+        delete_session(session_id)
+
+    response.delete_cookie("session_id")
+    return {"message": "Успешный выход"}

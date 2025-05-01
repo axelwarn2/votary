@@ -9,18 +9,6 @@ class EmployeeCreate(BaseModel):
     password: str
     role: str
 
-class EmployeeRead(BaseModel):
-    id: int
-    surname: str
-    name: str
-    lastname: Optional[str] = None
-    email: str
-    password: str
-    role: str
-
-    class Config:
-        orm_mode = True
-
 class EmployeeStats(BaseModel):
     id: int
     surname: str
@@ -32,3 +20,7 @@ class EmployeeStats(BaseModel):
 
     class Config:
         orm_mode = True
+
+class EmployeeLogin(BaseModel):
+    email: str
+    password: str

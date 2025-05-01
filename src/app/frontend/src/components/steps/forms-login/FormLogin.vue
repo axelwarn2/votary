@@ -1,6 +1,10 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { validateForm } from "../../../assets/validation.js";
+import axios from "axios";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const formData = ref({
     email: '',
@@ -31,12 +35,31 @@ const hasError = computed(() => {
     return Object.values(errors.value).some(error => error !== '');
 })
 
-const login = () => {
+const login = async () => {
     validatesForm();
     isFormSubmit.value = true;
 
     if ((hasError.value)) {
         return;
+    }
+
+    try {
+        const response = await axios.post("http://localhost:8000/login", {
+            email: formData.value.email,
+            password: formData.value.password
+        }, {
+            withCredentials: true
+        });
+
+        router.push("/");
+
+        formData.value = {
+            email: "",
+            password: ""
+        }
+        isFormSubmit.value = false;
+    } catch (error) {
+        console.error("Ошибка входа: ", error)
     }
 };
 </script>
