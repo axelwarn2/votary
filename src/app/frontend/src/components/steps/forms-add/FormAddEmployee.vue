@@ -47,7 +47,7 @@ const addEmployee = async () => {
     }
 
     try {
-        const response = await axios.post("http://localhost:8000/employee/", {
+        const response = await axios.post("http://localhost:8000/employee", {
             surname: formData.value.surname,
             name: formData.value.name,
             lastname: formData.value.lastname,
@@ -66,10 +66,8 @@ const addEmployee = async () => {
 
     } catch (error) {
         console.error("Ошибка при добавлении сотрудника:", error);
-        alert("Ошибка при добавлении сотрудника!");
     }
 };
-
 </script>
 
 <template>

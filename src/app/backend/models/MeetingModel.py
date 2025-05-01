@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Time, TIMESTAMP, Text
 from backend.utlis.db import Base
+from sqlalchemy import Column, Integer, TIMESTAMP, Time, Text
 
-class Meeting(Base):
+class MeetingModel(Base):
     __tablename__ = "Meeting"
 
     id = Column(Integer, primary_key=True, index=True)

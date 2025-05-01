@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm  import sessionmaker, DeclarativeBase, Session
-from fastapi import Depends
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:root@mysql/votary_db"
 

@@ -53,7 +53,7 @@ const register = async () => {
     }
 
     try {
-        const response = await axios.post("http://localhost:8000/employee/", {
+        const response = await axios.post("http://localhost:8000/employee", {
             surname: formData.value.surname,
             name: formData.value.name,
             lastname: formData.value.lastname,

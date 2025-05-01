@@ -1,16 +1,16 @@
-from backend.utlis.db import get_db
 from fastapi import APIRouter, Depends
+from backend.schemas.TaskSchem import TaskRead
 from sqlalchemy.orm import Session
-from backend.models.task import Task
-from backend.models.employee import Employee
-from backend.schemas.task import TaskRead
+from backend.utlis.db import get_db
 from sqlalchemy import select
+from backend.models.TaskModel import TaskModel
+from backend.models.EmployeeModel import EmployeeModel
 
 router = APIRouter()
 
 @router.get("/tasks", response_model=list[TaskRead])
 def get_all_tasks(db: Session = Depends(get_db)):
-    stmt = select(Task, Employee).join(Employee, Task.employee_id == Employee.id)
+    stmt = select(TaskModel, EmployeeModel).join(EmployeeModel, TaskModel.employee_id == EmployeeModel.id)
     result = db.execute(stmt).all()
     
     tasks = [
@@ -30,9 +30,9 @@ def get_all_tasks(db: Session = Depends(get_db)):
     ]
     return tasks
 
-@router.get("/task/{task_id}")
-def get_task(task_id: int, db: Session = Depends(get_db)):
-    stmt = select(Task, Employee).join(Employee, Task.employee_id == Employee.id).where(Task.id == task_id)
+@router.get("/tasks/{task_id}")
+def get_task_by_id(task_id: int, db: Session = Depends(get_db)):
+    stmt = select(TaskModel, EmployeeModel).join(EmployeeModel, TaskModel.employee_id == EmployeeModel.id).where(TaskModel.id == task_id)
     result = db.execute(stmt).first()
 
     task, employee = result

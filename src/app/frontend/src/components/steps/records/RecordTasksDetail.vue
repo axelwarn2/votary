@@ -8,7 +8,7 @@ const task = ref(null);
 
 onMounted(async () => {
     try {
-        const response = await axios.get(`http://localhost:8000/task/${route.params.id}`);
+        const response = await axios.get(`http://localhost:8000/tasks/${route.params.id}`);
         task.value = response.data;
     } catch (error) {
         console.error("Ошибка получения детальной информации задачи: ", error);

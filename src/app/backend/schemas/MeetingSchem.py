@@ -10,4 +10,3 @@ class MeetingRead(BaseModel):
 
     class Config:
         orm_mode = True
-

@@ -1,9 +1,7 @@
-# backend/schemas/employee.py
 from pydantic import BaseModel
 from typing import Optional
 
 class EmployeeCreate(BaseModel):
-    id: int
     surname: str
     name: str
     lastname: str

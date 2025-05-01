@@ -1,12 +1,12 @@
-from sqlalchemy import Column, Integer, String, Enum
-from backend.utlis.db import Base
 import enum
+from backend.utlis.db import Base
+from sqlalchemy import Column, Integer, String, Enum
 
 class RoleEnum(str, enum.Enum):
     руководитель = "руководитель"
     исполнитель = "исполнитель"
 
-class Employee(Base):
+class EmployeeModel(Base):
     __tablename__ = "Employee"
 
     id = Column(Integer, primary_key=True, index=True)

@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory} from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 import FormLogin from "./components/steps/forms-login/FormLogin.vue";
 import FormRegistration from "./components/steps/forms-login/FormRegistration.vue";
 import FormRecoverPassword from "./components/steps/forms-login/FormRecoverPassword.vue";

@@ -1,12 +1,12 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, String, Enum, ForeignKey
-from backend.utlis.db import Base
 import enum
+from backend.utlis.db import Base
+from sqlalchemy import Column, Integer, TIMESTAMP, String, Enum, ForeignKey
 
 class StatusEnum(str, enum.Enum):
     выполняется = "выполняется"
     выполнена = "выполнена"
 
-class Task(Base):
+class TaskModel(Base):
     __tablename__ = "Task"
 
     id = Column(Integer, primary_key=True, index=True)

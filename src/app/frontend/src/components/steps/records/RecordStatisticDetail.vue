@@ -8,7 +8,7 @@ const statistic = ref(null);
 
 onMounted(async () => {
     try {
-        const response = await axios.get(`http://localhost:8000/employee/${route.params.id}`);
+        const response = await axios.get(`http://localhost:8000/employees/${route.params.id}`);
         statistic.value = response.data;
     } catch (error) {
         console.error("Ошибка получения детальной информации сотрудника: ", error);
@@ -18,7 +18,6 @@ onMounted(async () => {
 const name = computed(() => {
     return `${statistic.value?.surname} ${statistic.value?.name}`;
 })
-console.log(name);
 </script>
 
 <template>
