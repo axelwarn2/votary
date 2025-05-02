@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import {computed, onMounted, ref} from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 
@@ -20,10 +20,12 @@ const checkAuth = async () => {
 
 checkAuth();
 
+const name = computed(() => {
+    return `${user.value?.surname} ${user.value?.name}`
+})
+
 const toggleDropdown = () => {
-    console.log("Нажато");
     isDropdownOpen.value = !isDropdownOpen.value;
-    console.log(isDropdownOpen.value);
 }
 
 const logout = async () => {
@@ -50,7 +52,7 @@ const logout = async () => {
 
             <template v-else>
                 <div class="user-container">
-                    <span class="user-label" @click="toggleDropdown">Пользователь</span>
+                    <span class="user-label" @click="toggleDropdown">{{ name }}</span>
                     <div v-if="isDropdownOpen" class="dropdown">
                         <button class="dropdown-item" @click="logout">Выйти</button>
                     </div>
