@@ -35,7 +35,7 @@ const logout = async () => {
         });
         user.value = null;
         isDropdownOpen.value = false;
-        router.push("/login");
+        router.push("/");
     } catch (error) {
         console.log("Ошибка выхода:", error);
     }

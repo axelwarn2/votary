@@ -51,7 +51,7 @@ const login = async () => {
             withCredentials: true
         });
 
-        router.push("/");
+        router.push("/record");
 
         formData.value = {
             email: "",
