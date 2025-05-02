@@ -1,135 +1,36 @@
-from fastapi import APIRouter, Depends, Response, Cookie, status
-from sqlalchemy.orm import Session
-from backend.models.EmployeeModel import EmployeeModel
+from fastapi import APIRouter, Depends, Response, Cookie
 from backend.schemas.EmployeeSchem import EmployeeCreate, EmployeeStats, EmployeeLogin
+from sqlalchemy.orm import Session
 from backend.utlis.db import get_db
-from backend.models.TaskModel import TaskModel, StatusEnum
-from sqlalchemy import select, func, case
-from datetime import datetime
-import random
-from backend.utlis.session import create_session, get_session, delete_session
+from backend.repositories.EmployeeRepository import EmployeeRepository
+from backend.services.AuthService import login_in_program, get_current_user_from_session, logout_from_program
 from typing import Optional
 
 router = APIRouter()
 
 @router.post("/employee")
 def create_employee(employee: EmployeeCreate, db: Session = Depends(get_db)):
-    new_employee = EmployeeModel(
-        surname = employee.surname,
-        name = employee.name,
-        lastname = employee.lastname,
-        email = employee.email,
-        password = employee.password,
-        role = employee.role
-    )
-
-    db.add(new_employee)
-    db.commit()
-    db.refresh(new_employee)
-    return new_employee
+    repository = EmployeeRepository(db)
+    return repository.create_employee(employee)
 
 @router.get("/employees", response_model=list[EmployeeStats])
-def get_employee_stats(db: Session = Depends(get_db)):
-    current_date = datetime(2025, 4, 30)
-    stmt = (
-        select(
-            EmployeeModel.id,
-            EmployeeModel.surname,
-            EmployeeModel.name,
-            func.count(TaskModel.id).label("count_task"),
-            func.sum(case((TaskModel.status == StatusEnum.выполнена, 1), else_=0)).label("complete"),
-            func.sum(case((TaskModel.deadline < current_date, 1), else_=0)).label("expired"),
-        )
-        .outerjoin(TaskModel, EmployeeModel.id == TaskModel.employee_id)
-        .group_by(EmployeeModel.id, EmployeeModel.surname, EmployeeModel.name)
-    )
-    result = db.execute(stmt).all()
+def get_employees(db: Session = Depends(get_db)):
+    repository = EmployeeRepository(db)
+    return repository.get_all_employees()
 
-    employees_stats = [
-        {
-            "id": row.id,
-            "surname": row.surname,
-            "name": row.name,
-            "count_task": row.count_task,
-            "complete": row.complete,
-            "expired": row.expired,
-            "efficiency": f"{random.randint(10, 100)}%"
-        }
-        for row in result
-    ] 
-    return employees_stats
-
-@router.get("/employees/{employee_id}")
-def get_employee_by_id(employee_id: int, db: Session = Depends(get_db)):
-    current_date = datetime(2025, 4, 30)
-    stmt = (
-        select(
-            EmployeeModel.id,
-            EmployeeModel.surname,
-            EmployeeModel.name,
-            func.count(TaskModel.id).label("count_task"),
-            func.sum(case((TaskModel.status == StatusEnum.выполнена, 1), else_=0)).label("complete"),
-            func.sum(case((TaskModel.deadline < current_date, 1), else_=0)).label("expired"),
-        )
-        .outerjoin(TaskModel, EmployeeModel.id == TaskModel.employee_id)
-        .where(EmployeeModel.id == employee_id)
-        .group_by(EmployeeModel.id, EmployeeModel.surname, EmployeeModel.name)
-    )
-    result = db.execute(stmt).first()
-
-    return {
-        "id": result.id,
-        "surname": result.surname,
-        "name": result.name,
-        "count_task": result.count_task,
-        "complete": result.complete,
-        "expired": result.expired,
-        "efficiency": f"{random.randint(10, 100)}%"
-    }
+@router.get("/employees/{employee_id}", response_model=EmployeeStats)
+def get_employee(employee_id: int, db: Session = Depends(get_db)):
+    repository = EmployeeRepository(db)
+    return repository.get_employee_by_id(employee_id)
 
 @router.post("/login")
-def login_employee(login_data: EmployeeLogin, response: Response, db: Session = Depends(get_db)):
-    employee = db.query(EmployeeModel).filter(EmployeeModel.email == login_data.email).first()
-
-    session_id = create_session({
-        "id": employee.id,
-        "surname": employee.surname,
-        "name": employee.name,
-        "lastname": employee.lastname,
-        "email": employee.email,
-        "role": employee.role
-    })
-
-    response.set_cookie(
-        key = "session_id",
-        value = session_id,
-        httponly = True,
-        secure = False,
-        samesite = "lax",
-        max_age = 1800
-    )
-
-    return {
-        "message": "Успешный вход",
-        "employee": {
-            "id": employee.id,
-            "surname": employee.surname,
-            "name": employee.name,
-            "lastname": employee.lastname,
-            "email": employee.email,
-            "role": employee.role
-        }
-    }
+def login(login_data: EmployeeLogin, response: Response, db: Session = Depends(get_db)):
+    return login_in_program(login_data, response, db)
 
 @router.get("/me")
 def get_current_user(session_id: Optional[str] = Cookie(None)):
-    session = get_session(session_id)
-    return session["employee"]
+    return get_current_user_from_session(session_id)
 
 @router.post("/logout")
 def logout(response: Response, session_id: Optional[str] = Cookie(None)):
-    if session_id:
-        delete_session(session_id)
-
-    response.delete_cookie("session_id")
-    return {"message": "Успешный выход"}
+    return logout_from_program(response, session_id)
