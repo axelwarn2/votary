@@ -7,7 +7,6 @@ import axios from "axios";
 
 axios.defaults.withCredentials = true;
 
-const app = createApp(Appointment);
-app.use(store);
-app.use(router);
-app.mount('#app');
+document.addEventListener("DOMContentLoaded", 
+    createApp(Appointment).use(store).use(router).mount('#app')
+)

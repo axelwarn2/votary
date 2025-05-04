@@ -3,7 +3,7 @@ export default {
     name: "LeftBorder",
     methods: {
         goToHome() {
-            this.$router.push('/');
+            this.$router.push('/record');
         },
         goToMeetings() {
             this.$router.push('/meetings');

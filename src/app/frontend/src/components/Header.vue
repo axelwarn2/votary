@@ -1,24 +1,13 @@
 <script setup>
-import {computed, onMounted, ref} from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import axios from "axios";
+import { useStore } from 'vuex';
 
 const router = useRouter();
-const user = ref(null);
+const store = useStore();
 const isDropdownOpen = ref(false);
 
-const checkAuth = async () => {
-    try {
-        const response = await axios.get("http://localhost:8000/me", {
-            withCredentials: true
-        });
-        user.value = response.data;
-    } catch (error) {
-        user.value = null;
-    }
-}
-
-checkAuth();
+const user = computed(() => store.state.user);
 
 const name = computed(() => {
     return `${user.value?.surname} ${user.value?.name}`
@@ -29,16 +18,9 @@ const toggleDropdown = () => {
 }
 
 const logout = async () => {
-    try {
-        const response = await axios.post("http://localhost:8000/logout", null, {
-            withCredentials: true
-        });
-        user.value = null;
-        isDropdownOpen.value = false;
-        router.push("/");
-    } catch (error) {
-        console.log("Ошибка выхода:", error);
-    }
+    await store.dispatch('logout');
+    isDropdownOpen.value = false;
+    router.push('/');
 }
 </script>
 

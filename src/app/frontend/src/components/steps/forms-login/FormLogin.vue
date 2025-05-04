@@ -3,8 +3,10 @@ import { computed, ref, watch } from "vue";
 import { validateForm } from "../../../assets/validation.js";
 import axios from "axios";
 import { useRouter } from "vue-router";
+import { useStore } from 'vuex';
 
 const router = useRouter();
+const store = useStore();
 
 const formData = ref({
     email: '',
@@ -44,22 +46,18 @@ const login = async () => {
     }
 
     try {
-        const response = await axios.post("http://localhost:8000/login", {
+        await axios.post("http://localhost:8000/login", {
             email: formData.value.email,
             password: formData.value.password
         }, {
             withCredentials: true
         });
-
+        await store.dispatch("fetchUser");
         router.push("/record");
-
-        formData.value = {
-            email: "",
-            password: ""
-        }
+        formData.value = { email: '', password: '' };
         isFormSubmit.value = false;
     } catch (error) {
-        console.error("Ошибка входа: ", error)
+        console.error("Ошибка входа:", error);
     }
 };
 </script>

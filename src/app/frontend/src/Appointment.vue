@@ -1,24 +1,15 @@
 <script setup>
-import {onMounted, ref} from "vue";
+import { onMounted, computed } from "vue";
 import LeftBorder from "./components/LeftBorder.vue";
 import Header from "./components/Header.vue";
-import axios from "axios";
+import { useStore } from 'vuex';
 
-const user = ref(null)
+const store = useStore();
+const user = computed(() => store.state.user);
 
-const checkAuth = async () => {
-    try {
-        const response = await axios.get("http://localhost:8000/me", {
-            withCredentials: true
-        });
-        user.value = response.data;
-    } catch (error) {
-        console.error("Ошибка получения пользователя", error)
-        user.value = null;
-    }
-}
-
-checkAuth();
+onMounted(() => {
+    store.dispatch('fetchUser');
+});
 </script>
 
 <template>
