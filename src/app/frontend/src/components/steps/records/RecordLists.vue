@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
@@ -11,30 +11,32 @@ const props = defineProps({
 
 const store = useStore();
 const router = useRouter();
+const isLoading = ref(false);
 
-const meetings = ref([]);
-const tasks = ref([]);
-const statistics = ref([]);
+const loadData = async () => {
+    isLoading.value = true;
 
-onMounted(async () => {
-    if (!props.isTasks && !props.isStatistics) {
-        try {
-        const responseMeetings = await axios.get('http://localhost:8000/meetings');
-        const responeTasks = await axios.get('http://localhost:8000/tasks');
-        const responseStatistics = await axios.get('http://localhost:8000/employees');
-
-        meetings.value = responseMeetings.data;
-        tasks.value = responeTasks.data;
-        statistics.value = responseStatistics.data;
-
-        store.commit('setMeetings', responseMeetings.data);
-        store.commit('setTasks', responeTasks.data);
-        store.commit('setStatistics', responseStatistics.data);
-    } catch (error) {
-        console.error('Ошибка при получении встреч:', error);
+    try {
+        if (props.isTasks) {
+            await store.dispatch('fetchTasks');
+        } else if (props.isStatistics) {
+            await store.dispatch('fetchStatistics');
+        } else {
+            await store.dispatch('fetchMeetings');
+        }
+    } finally {
+        isLoading.value = false;
     }
-  }
-});
+}
+
+onMounted(loadData);
+
+watch(
+    () => [props.isTasks, props.isStatistics],
+    () => {
+        loadData();
+    }
+)
 
 const headers = computed(() => {
     if (props.isTasks) return store.state.taskData.headers;

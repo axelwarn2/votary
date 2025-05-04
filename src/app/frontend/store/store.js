@@ -78,6 +78,30 @@ export default createStore({
             } catch (error) {
                 console.error("Ошибка выхода:", error);
             }
+        },
+        async fetchMeetings({ commit }) {
+            try {
+                const response = await axios.get('http://localhost:8000/meetings');
+                commit('setMeetings', response.data);
+            } catch (error) {
+                console.error('Ошибка при получении встреч:', error);
+            }
+        },
+        async fetchTasks({ commit }) {
+            try {
+                const response = await axios.get('http://localhost:8000/tasks');
+                commit('setTasks', response.data);
+            } catch (error) {
+                console.error('Ошибка при получении задач:', error);
+            }
+        },
+        async fetchStatistics({ commit }) {
+            try {
+                const response = await axios.get('http://localhost:8000/employees');
+                commit('setStatistics', response.data);
+            } catch (error) {
+                console.error('Ошибка при получении статистики:', error);
+            }
         }
     }
 });
