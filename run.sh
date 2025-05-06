@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Запуск Docker (backend + DB)"
+docker compose down
 docker compose up --build -d
 
 echo "Docker-контейнеры запущены"

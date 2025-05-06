@@ -3,14 +3,20 @@
 FROM python:3.11-slim
 
 # Установка зависимостей системы
-RUN apt-get update && apt-get install -y gcc libpq-dev
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 # Установка зависимостей проекта
 WORKDIR /app
 
 COPY ./src/app/ /app
 
-RUN pip install --upgrade pip && pip install -r backend/requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r backend/requirements.txt
+
+COPY ./src/app/backend/config/vosk-model-small-ru-0.22 /app/backend/config/vosk-model-small-ru-0.22
 
 # Экспонируем порт
 EXPOSE 8000

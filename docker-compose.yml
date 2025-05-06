@@ -12,6 +12,8 @@ services:
       - .env
     depends_on:
       - mysql
+    networks:
+      - votary_network
 
   mysql:
     build:
@@ -26,12 +28,20 @@ services:
       MYSQL_DATABASE: votary_db
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - votary_network
 
   adminer:
     image: adminer
     restart: always
     ports:
       - 8080:8080
-      
+    networks:
+      - votary_network
+
+networks:
+  votary_network:
+    driver: bridge
+
 volumes:
   mysql-data:
