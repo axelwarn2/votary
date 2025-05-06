@@ -3,9 +3,7 @@ uvicorn[standard]
 sqlalchemy
 pymysql
 python-dotenv
-vosk==0.3.45
-webrtcvad==2.0.10
-sounddevice==0.4.6
-numpy==1.26.4
-pydub==0.25.1
+openai-whisper==20231117 
+pydub==0.25.1 
+numpy==1.26.4 
 cryptography==43.0.1

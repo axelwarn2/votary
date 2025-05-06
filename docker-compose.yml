@@ -8,12 +8,18 @@ services:
       - "8000:8000"
     volumes:
       - ./src/app:/app
+      - whisper_cache:/root/.cache/whisper
     env_file:
       - .env
     depends_on:
       - mysql
     networks:
       - votary_network
+    deploy:
+      resources:
+        limits:
+          memory: "4G"  # Увеличиваем до 4 ГБ RAM
+          cpus: "2.0"  # Увеличиваем до 2 CPU
 
   mysql:
     build:
@@ -45,3 +51,4 @@ networks:
 
 volumes:
   mysql-data:
+  whisper_cache:

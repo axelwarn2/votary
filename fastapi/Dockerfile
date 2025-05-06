@@ -1,22 +1,21 @@
-# fastapi/Dockerfile
-
 FROM python:3.11-slim
 
-# Установка зависимостей системы
+# Установка системных зависимостей
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
     ffmpeg \
+    libopenblas-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Установка зависимостей проекта
+# Установка рабочей директории
 WORKDIR /app
 
+# Копирование исходного кода
 COPY ./src/app/ /app
 
+# Установка зависимостей Python
 RUN pip install --upgrade pip && pip install --no-cache-dir -r backend/requirements.txt
-
-COPY ./src/app/backend/config/vosk-model-small-ru-0.22 /app/backend/config/vosk-model-small-ru-0.22
 
 # Экспонируем порт
 EXPOSE 8000
