@@ -4,3 +4,5 @@ package-lock.json
 .env
 __pycache__
 src/app/backend/venv
+transcription.txt
+.requirements_hash

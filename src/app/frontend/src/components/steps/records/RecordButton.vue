@@ -1,20 +1,3 @@
-<template>
-  <div class="record-button">
-    <button
-      :class="['record-button__button', isRecording ? 'record-button__button--on' : 'record-button__button--off']"
-      @click="toggleMicro"
-      :disabled="isProcessing"
-    >
-      <div :class="['record-button__icon--off', isRecording ? 'record-button__icon--on' : '']"></div>
-    </button>
-    <p class="record-button__status">
-      {{ isRecording ? 'Микрофон включен' : (isProcessing ? 'Обработка...' : 'Микрофон выключен') }}
-    </p>
-    <p v-if="transcription" class="record-button__transcription">{{ transcription }}</p>
-    <p v-if="errorMessage" class="record-button__error">{{ errorMessage }}</p>
-  </div>
-</template>
-
 <script setup>
 import { ref, onBeforeUnmount } from 'vue';
 
@@ -23,7 +6,6 @@ const isProcessing = ref(false);
 const socket = ref(null);
 const mediaRecorder = ref(null);
 const stream = ref(null);
-const transcription = ref('');
 const errorMessage = ref('');
 
 async function toggleMicro() {
@@ -51,16 +33,7 @@ async function toggleMicro() {
         console.log('WebSocket message received:', ev.data);
         try {
           const data = JSON.parse(ev.data);
-          if (data.text) {
-            transcription.value = data.text;
-            isProcessing.value = false;
-            errorMessage.value = '';
-            console.log('Text received:', data.text);
-            if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-              socket.value.close();
-              console.log('WebSocket closed after receiving text');
-            }
-          } else if (data.error) {
+          if (data.error) {
             errorMessage.value = data.error;
             isProcessing.value = false;
             console.log('Error received:', data.error);
@@ -84,16 +57,7 @@ async function toggleMicro() {
 
       socket.value.onclose = () => {
         console.log('WebSocket closed');
-        if (!transcription.value && !errorMessage.value) {
-          isProcessing.value = true;
-          setTimeout(() => {
-            if (isProcessing.value) {
-              isProcessing.value = false;
-              errorMessage.value = 'Сервер не ответил с текстом';
-              console.log('Timeout: No response from server');
-            }
-          }, 10000); // Уменьшили таймаут до 10 секунд
-        }
+        isProcessing.value = false;
         stopRecording();
       };
 
@@ -103,6 +67,13 @@ async function toggleMicro() {
         isProcessing.value = false;
         stopRecording();
       };
+
+      const pingInterval = setInterval(() => {
+        if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+          socket.value.send(JSON.stringify({ type: 'ping' }));
+          console.log('Sent ping');
+        }
+      }, 30000);
 
       mediaRecorder.value.ondataavailable = (e) => {
         if (e.data.size > 0 && socket.value.readyState === WebSocket.OPEN) {
@@ -115,6 +86,8 @@ async function toggleMicro() {
       mediaRecorder.value.start(250);
       isRecording.value = true;
       errorMessage.value = '';
+
+      onBeforeUnmount(() => clearInterval(pingInterval));
     } catch (err) {
       console.error('Recording error:', err);
       errorMessage.value = 'Не удалось начать запись';
@@ -128,6 +101,7 @@ async function toggleMicro() {
 }
 
 function stopRecording() {
+  console.log('stopRecording called');
   if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
     mediaRecorder.value.stop();
   }
@@ -136,6 +110,7 @@ function stopRecording() {
     console.log('WebSocket closed in stopRecording');
   }
   isRecording.value = false;
+  isProcessing.value = true;
 }
 
 function stopStream() {
@@ -155,20 +130,17 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
-.record-button__transcription {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #333;
-}
-.record-button__error {
-  margin-top: 10px;
-  font-size: 14px;
-  color: red;
-}
-.record-button__status {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #555;
-}
-</style>
+<template>
+  <div class="record-button">
+    <button
+      :class="['record-button__button', isRecording ? 'record-button__button--on' : 'record-button__button--off']"
+      @click="toggleMicro"
+      :disabled="isProcessing"
+    >
+      <div :class="['record-button__icon--off', isRecording ? 'record-button__icon--on' : '']"></div>
+    </button>
+    <p class="record-button__status">
+      {{ isRecording ? 'Микрофон включен' : (isProcessing ? 'Обработка...' : 'Микрофон выключен') }}
+    </p>
+  </div>
+</template>
