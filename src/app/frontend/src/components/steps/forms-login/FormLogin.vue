@@ -24,6 +24,7 @@ const fieldsConfig = {
 };
 
 const isFormSubmit = ref(false);
+const loginError = ref('');
 
 const validatesForm = () => {
     errors.value = validateForm(formData.value, fieldsConfig);
@@ -41,23 +42,30 @@ const login = async () => {
     validatesForm();
     isFormSubmit.value = true;
 
-    if ((hasError.value)) {
+    if (hasError.value) {
         return;
     }
 
     try {
-        await axios.post("http://localhost:8000/login", {
+        const response = await axios.post("http://localhost:8000/login", {
             email: formData.value.email,
             password: formData.value.password
         }, {
             withCredentials: true
         });
+
+        if (response.data.session_id) {
+            localStorage.setItem('session_id', response.data.session_id);
+        }
+        
         await store.dispatch("fetchUser");
+        loginError.value = '';
         router.push("/record");
         formData.value = { email: '', password: '' };
         isFormSubmit.value = false;
     } catch (error) {
         console.error("Ошибка входа:", error);
+        loginError.value = error.response?.data?.detail || 'Ошибка входа';
     }
 };
 </script>

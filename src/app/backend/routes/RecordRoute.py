@@ -1,4 +1,4 @@
-from fastapi import APIRouter, WebSocket, Depends
+from fastapi import APIRouter, WebSocket, Depends, WebSocketException, Query
 from sqlalchemy.orm import Session
 import subprocess
 import json
@@ -12,6 +12,7 @@ from backend.utlis.db import get_db
 from backend.models.EmployeeModel import EmployeeModel
 from backend.models.MeetingModel import MeetingModel
 from backend.models.TaskModel import TaskModel, StatusEnum
+from backend.services.AuthService import get_current_user_from_session
 
 router = APIRouter()
 
@@ -25,9 +26,25 @@ TRANSCRIPTION_FILE = "/app/transcription.txt"
 STOP_WORDS = {"стоп", "stop", "стап", "стоб"}
 
 @router.websocket("/record")
-async def record_audio(websocket: WebSocket, db: Session = Depends(get_db)):
+async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: Session = Depends(get_db)):
     await websocket.accept()
     logger.info("WebSocket connection established")
+
+    try:
+        session = get_current_user_from_session(session_id)
+    except Exception as e:
+        await websocket.send_json({"error": str(e)})
+        await websocket.close()
+        logger.error("Unauthorized WebSocket connection attempt: %s", str(e))
+        return
+
+    if session.get("role") != "руководитель":
+        await websocket.send_json({"error": "Unauthorized: Only leaders can record meetings"})
+        await websocket.close()
+        logger.error("Unauthorized WebSocket connection attempt: not a leader")
+        return
+
+    leader_id = session["id"]
     await websocket.send_json({"status": "connected"})
 
     employees = db.query(EmployeeModel).all()
@@ -52,14 +69,14 @@ async def record_audio(websocket: WebSocket, db: Session = Depends(get_db)):
                 if audio_file:
                     audio_file.close()
                     audio_file = None
-                    text = await process_audio_fragment(audio_path, db, employee_names, tasks, full_text, websocket)
+                    text = await process_audio_fragment(audio_path, db, employee_names, tasks, full_text, websocket, leader_id)
                     if text:
                         full_text.append(text)
                     fragment_index += 1
                     start_time = datetime.now()
 
             try:
-                msg = await asyncio.wait_for(websocket.receive(), timeout=600)  # 10 минут
+                msg = await asyncio.wait_for(websocket.receive(), timeout=600)
                 if msg.get("type") == "websocket.disconnect":
                     logger.info("WebSocket disconnected by client")
                     break
@@ -85,7 +102,7 @@ async def record_audio(websocket: WebSocket, db: Session = Depends(get_db)):
     finally:
         if audio_file:
             audio_file.close()
-            text = await process_audio_fragment(audio_path, db, employee_names, tasks, full_text, websocket)
+            text = await process_audio_fragment(audio_path, db, employee_names, tasks, full_text, websocket, leader_id)
             if text:
                 full_text.append(text)
 
@@ -110,7 +127,8 @@ async def record_audio(websocket: WebSocket, db: Session = Depends(get_db)):
                     description=task["description"],
                     status=StatusEnum.выполняется,
                     employee_id=task["employee_id"],
-                    meeting_id=meeting.id
+                    meeting_id=meeting.id,
+                    leader_id=leader_id
                 )
                 db.add(db_task)
             db.commit()
@@ -129,7 +147,7 @@ async def record_audio(websocket: WebSocket, db: Session = Depends(get_db)):
             await websocket.close()
             logger.info("WebSocket closed by server")
 
-async def process_audio_fragment(audio_path: str, db: Session, employee_names: list, tasks: list, full_text: list, websocket: WebSocket):
+async def process_audio_fragment(audio_path: str, db: Session, employee_names: list, tasks: list, full_text: list, websocket: WebSocket, leader_id: int):
     wav_path = audio_path.replace(".webm", ".wav")
     try:
         subprocess.run(
@@ -178,7 +196,6 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
                 for surname, name, emp_id in employee_names:
                     if surname in sentence_lower or name in sentence_lower:
                         logger.info("Found employee: surname=%s, name=%s, emp_id=%d", surname, name, emp_id)
-                    
                         surname_index = sentence_lower.find(surname) if surname in sentence_lower else len(sentence_lower)
                         name_index = sentence_lower.find(name) if name in sentence_lower else len(sentence_lower)
                         start_index = min(surname_index, name_index)
@@ -192,9 +209,13 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
                             stop_index = min(i for i in stop_indices if i >= 0)
                             task_text = task_text[:stop_index].strip()
                         if task_text:
-                            task = {"employee_id": emp_id, "description": task_text}
+                            task = {
+                                "employee_id": emp_id,
+                                "description": task_text,
+                                "leader_id": leader_id
+                            }
                             tasks.append(task)
-                            logger.info("Task completed for employee ID %d: %s", emp_id, task_text)
+                            logger.info("Task created for employee ID %d: %s, leader_id=%d", emp_id, task_text, leader_id)
                         else:
                             logger.warning("Task text is empty for employee ID %d", emp_id)
 
@@ -212,3 +233,4 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
             await websocket.send_json({"error": str(e)})
             logger.info("Sent Whisper error to client")
         return ""
+    

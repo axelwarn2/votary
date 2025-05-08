@@ -16,3 +16,4 @@ def get_session(session_id: str):
 
 def delete_session(session_id: str):
     sessions.pop(session_id, None)
+    

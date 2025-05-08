@@ -1,8 +1,14 @@
+from fastapi import HTTPException
 from backend.utlis.session import create_session, get_session, delete_session
 from backend.models.EmployeeModel import EmployeeModel
 
 def login_in_program(login_data, response, db):
     employee = db.query(EmployeeModel).filter(EmployeeModel.email == login_data.email).first()
+    if not employee:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    if employee.password != login_data.password:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
     session_id = create_session({
         "id": employee.id,
@@ -19,13 +25,16 @@ def login_in_program(login_data, response, db):
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age=1800
+        max_age=1800,
+        path="/"
     )
 
-    return {"message": "Успешный вход"}
+    return {"message": "Успешный вход", "session_id": session_id}
 
-def get_current_user_from_session(session_id):
+def get_current_user_from_session(session_id, db=None):
     session = get_session(session_id)
+    if not session or "employee" not in session:
+        raise HTTPException(status_code=401, detail="Invalid session")
     return session["employee"]
 
 def logout_from_program(response, session_id):

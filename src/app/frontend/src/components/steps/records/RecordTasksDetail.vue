@@ -37,6 +37,10 @@ const date_production = computed(() => {
 const responcible = computed(() => {
     return `${task.value?.employee_surname} ${task.value?.employee_name}`;
 })
+
+const leader = computed(() => {
+    return `${task.value?.leader_surname} ${task.value?.leader_name}`;
+});
 </script>
 
 <template>
@@ -75,7 +79,7 @@ const responcible = computed(() => {
                             <p class="task-details__participant-title">Постановщик</p>
                             <div class="task-details__participant-info">
                                 <div class="task-details__avatar"></div>
-                                <p class="task-details__participant-name">Елисеев Андрей</p>
+                                <p class="task-details__participant-name">{{ leader }}</p>
                             </div>
                         </div>
                         <div class="task-details__participant">

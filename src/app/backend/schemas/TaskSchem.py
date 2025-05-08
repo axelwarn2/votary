@@ -13,6 +13,9 @@ class TaskRead(BaseModel):
     meeting_id: int
     employee_surname: str
     employee_name: str
+    leader_id: int
+    leader_surname: str
+    leader_name: str
 
     class Config:
         orm_mode = True

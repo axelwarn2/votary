@@ -6,111 +6,115 @@ const isProcessing = ref(false);
 const socket = ref(null);
 const mediaRecorder = ref(null);
 const stream = ref(null);
-const errorMessage = ref('');
+
+function getSessionId() {
+  const sessionId = localStorage.getItem('session_id');
+  return sessionId;
+}
 
 async function toggleMicro() {
-  if (!isRecording.value) {
-    try {
-      stream.value = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
-      mediaRecorder.value = new MediaRecorder(stream.value, { mimeType });
+  if (isRecording.value) {
+    await stopRecording();
+    return;
+  }
 
-      socket.value = new WebSocket('ws://172.18.0.4:8000/record');
-      await new Promise((res, rej) => {
-        const timeout = setTimeout(() => rej(new Error('WS timeout')), 5000);
-        socket.value.onopen = () => {
-          clearTimeout(timeout);
-          console.log('WebSocket opened');
-          res();
-        };
-        socket.value.onerror = (e) => {
-          console.error('WebSocket error:', e);
-          rej(e);
-        };
-      });
+  try {
+    const sessionId = getSessionId();
 
-      socket.value.onmessage = (ev) => {
-        console.log('WebSocket message received:', ev.data);
-        try {
-          const data = JSON.parse(ev.data);
-          if (data.error) {
-            errorMessage.value = data.error;
-            isProcessing.value = false;
-            console.log('Error received:', data.error);
-            if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-              socket.value.close();
-              console.log('WebSocket closed after receiving error');
-            }
-          } else if (data.status === 'connected') {
-            console.log('WebSocket connection confirmed');
-          }
-        } catch (e) {
-          console.error('Error parsing WebSocket message:', e);
-          errorMessage.value = 'Ошибка обработки сообщения';
+    stream.value = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+    mediaRecorder.value = new MediaRecorder(stream.value, { mimeType });
+
+    socket.value = new WebSocket(`ws://localhost:8000/record?session_id=${sessionId}`);
+    await new Promise((res, rej) => {
+      const timeout = setTimeout(() => {
+        console.error('WebSocket connection timeout');
+        rej(new Error('WS timeout'));
+      }, 5000);
+      socket.value.onopen = () => {
+        clearTimeout(timeout);
+        res();
+      };
+      socket.value.onerror = (e) => {
+        console.error('WebSocket error during connection:', e);
+        rej(e);
+      };
+    });
+
+    socket.value.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data);
+        if (data.error) {
           isProcessing.value = false;
           if (socket.value && socket.value.readyState === WebSocket.OPEN) {
             socket.value.close();
-            console.log('WebSocket closed after parsing error');
           }
+        } else if (data.status === 'connected') {
         }
-      };
-
-      socket.value.onclose = () => {
-        console.log('WebSocket closed');
+      } catch (e) {
+        console.error('Error parsing WebSocket message:', e);
         isProcessing.value = false;
-        stopRecording();
-      };
-
-      socket.value.onerror = (e) => {
-        console.error('WebSocket error:', e);
-        errorMessage.value = 'Ошибка соединения с сервером';
-        isProcessing.value = false;
-        stopRecording();
-      };
-
-      const pingInterval = setInterval(() => {
         if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-          socket.value.send(JSON.stringify({ type: 'ping' }));
-          console.log('Sent ping');
+          socket.value.close();
         }
-      }, 30000);
+      }
+    };
 
-      mediaRecorder.value.ondataavailable = (e) => {
-        if (e.data.size > 0 && socket.value.readyState === WebSocket.OPEN) {
-          socket.value.send(e.data);
-          console.log('Sent audio chunk:', e.data.size, 'bytes');
-        }
-      };
-      mediaRecorder.value.onstop = () => stopStream();
-
-      mediaRecorder.value.start(250);
-      isRecording.value = true;
-      errorMessage.value = '';
-
-      onBeforeUnmount(() => clearInterval(pingInterval));
-    } catch (err) {
-      console.error('Recording error:', err);
-      errorMessage.value = 'Не удалось начать запись';
+    socket.value.onclose = () => {
       isProcessing.value = false;
       stopRecording();
+    };
+
+    socket.value.onerror = (e) => {
+      console.error('WebSocket error:', e);
+      isProcessing.value = false;
+      stopRecording();
+    };
+
+    let pingInterval = null;
+    pingInterval = setInterval(() => {
+      if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+        socket.value.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 30000);
+
+    mediaRecorder.value.ondataavailable = (e) => {
+      if (e.data.size > 0 && socket.value.readyState === WebSocket.OPEN) {
+        socket.value.send(e.data);
+      }
+    };
+    mediaRecorder.value.onstop = () => {
       stopStream();
-    }
-  } else {
+    };
+
+    mediaRecorder.value.start(250);
+    isRecording.value = true;
+    isProcessing.value = false;
+
+    onBeforeUnmount(() => {
+      if (pingInterval) {
+        clearInterval(pingInterval);
+      }
+    });
+  } catch (err) {
+    isProcessing.value = false;
     stopRecording();
+    stopStream();
   }
 }
 
-function stopRecording() {
-  console.log('stopRecording called');
-  if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
-    mediaRecorder.value.stop();
+async function stopRecording() {
+  try {
+    if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
+      mediaRecorder.value.stop();
+    }
+    if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+      socket.value.close();
+    }
+    isRecording.value = false;
+    isProcessing.value = true;
+  } catch (err) {
   }
-  if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-    socket.value.close();
-    console.log('WebSocket closed in stopRecording');
-  }
-  isRecording.value = false;
-  isProcessing.value = true;
 }
 
 function stopStream() {
@@ -125,7 +129,6 @@ onBeforeUnmount(() => {
   stopStream();
   if (socket.value && socket.value.readyState === WebSocket.OPEN) {
     socket.value.close();
-    console.log('WebSocket closed in onBeforeUnmount');
   }
 });
 </script>
