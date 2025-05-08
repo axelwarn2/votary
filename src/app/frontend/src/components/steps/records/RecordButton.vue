@@ -6,6 +6,21 @@ const isProcessing = ref(false);
 const socket = ref(null);
 const mediaRecorder = ref(null);
 const stream = ref(null);
+const startTime = ref(null);
+const endTime = ref(null);
+
+let pingInterval = null;
+
+onBeforeUnmount(() => {
+  if (pingInterval) {
+    clearInterval(pingInterval);
+  }
+  stopRecording();
+  stopStream();
+  if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+    socket.value.close();
+  }
+});
 
 function getSessionId() {
   const sessionId = localStorage.getItem('session_id');
@@ -14,6 +29,7 @@ function getSessionId() {
 
 async function toggleMicro() {
   if (isRecording.value) {
+    endTime.value = new Date().toISOString();
     await stopRecording();
     return;
   }
@@ -33,6 +49,8 @@ async function toggleMicro() {
       }, 5000);
       socket.value.onopen = () => {
         clearTimeout(timeout);
+        startTime.value = new Date().toISOString();
+        socket.value.send(JSON.stringify({ type: 'start', time_start: startTime.value }));
         res();
       };
       socket.value.onerror = (e) => {
@@ -71,7 +89,6 @@ async function toggleMicro() {
       stopRecording();
     };
 
-    let pingInterval = null;
     pingInterval = setInterval(() => {
       if (socket.value && socket.value.readyState === WebSocket.OPEN) {
         socket.value.send(JSON.stringify({ type: 'ping' }));
@@ -90,13 +107,8 @@ async function toggleMicro() {
     mediaRecorder.value.start(250);
     isRecording.value = true;
     isProcessing.value = false;
-
-    onBeforeUnmount(() => {
-      if (pingInterval) {
-        clearInterval(pingInterval);
-      }
-    });
   } catch (err) {
+    console.error('Recording error:', err);
     isProcessing.value = false;
     stopRecording();
     stopStream();
@@ -108,12 +120,17 @@ async function stopRecording() {
     if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
       mediaRecorder.value.stop();
     }
+
     if (socket.value && socket.value.readyState === WebSocket.OPEN) {
+      socket.value.send(JSON.stringify({ type: 'stop', time_end: endTime.value }));
+
+      await new Promise(resolve => setTimeout(resolve, 100));
       socket.value.close();
     }
     isRecording.value = false;
     isProcessing.value = true;
   } catch (err) {
+    console.error('Error stopping recording:', err);
   }
 }
 
@@ -123,14 +140,6 @@ function stopStream() {
     stream.value = null;
   }
 }
-
-onBeforeUnmount(() => {
-  stopRecording();
-  stopStream();
-  if (socket.value && socket.value.readyState === WebSocket.OPEN) {
-    socket.value.close();
-  }
-});
 </script>
 
 <template>

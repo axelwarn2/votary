@@ -54,26 +54,28 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
     full_text = []
     tasks = []
     fragment_index = 0
-    start_time = datetime.now()
+    start_time = None
+    end_time = None
     audio_file = None
+    current_audio_path = None
 
     try:
         while True:
-            if audio_file is None:
-                audio_path = TEMP_AUDIO_PATH.format(fragment_index)
-                audio_file = open(audio_path, "wb")
-                logger.info("Opened new audio fragment: %s", audio_path)
+            if not audio_file:
+                current_audio_path = TEMP_AUDIO_PATH.format(fragment_index)
+                audio_file = open(current_audio_path, "wb")
+                logger.info("Opened new audio fragment: %s", current_audio_path)
 
             current_time = asyncio.get_event_loop().time()
-            if current_time - start_time.timestamp() >= FRAGMENT_DURATION:
+            if start_time and (current_time - datetime.fromisoformat(start_time).timestamp() >= FRAGMENT_DURATION):
                 if audio_file:
                     audio_file.close()
                     audio_file = None
-                    text = await process_audio_fragment(audio_path, db, employee_names, tasks, full_text, websocket, leader_id)
+                    text = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id)
                     if text:
                         full_text.append(text)
                     fragment_index += 1
-                    start_time = datetime.now()
+                    current_audio_path = None
 
             try:
                 msg = await asyncio.wait_for(websocket.receive(), timeout=600)
@@ -81,20 +83,34 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
                     logger.info("WebSocket disconnected by client")
                     break
 
-                data = msg.get("bytes")
-                if not data:
-                    continue
+                if msg.get("text"):
+                    data = json.loads(msg["text"])
+                    if data.get("type") == "start" and data.get("time_start"):
+                        start_time = data["time_start"]
+                        logger.info("Received start_time: %s", start_time)
+                    elif data.get("type") == "stop" and data.get("time_end"):
+                        end_time = data["time_end"]
+                        logger.info("Received end_time: %s", end_time)
+                        if audio_file:
+                            audio_file.close()
+                            audio_file = None
+                        break
+                    elif data.get("type") == "ping":
+                        logger.info("Received ping")
+                        continue
 
-                logger.info("Received audio chunk of size: %d bytes", len(data))
-                audio_file.write(data)
-                audio_file.flush()
+                data = msg.get("bytes")
+                if data:
+                    logger.info("Received audio chunk of size: %d bytes", len(data))
+                    audio_file.write(data)
+                    audio_file.flush()
 
             except asyncio.TimeoutError:
                 logger.info("WebSocket receive timeout, closing connection")
                 break
 
     except Exception as e:
-        logger.error(f"WebSocket handler error: %s", str(e))
+        logger.error("WebSocket handler error: %s", str(e))
         if websocket.state == 1:
             await websocket.send_json({"error": str(e)})
             logger.info("Sent error message to client")
@@ -102,23 +118,35 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
     finally:
         if audio_file:
             audio_file.close()
-            text = await process_audio_fragment(audio_path, db, employee_names, tasks, full_text, websocket, leader_id)
+            audio_file = None
+
+        if current_audio_path and os.path.exists(current_audio_path):
+            logger.info("Processing final audio fragment: %s, size: %d bytes", current_audio_path, os.path.getsize(current_audio_path))
+            text = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id)
             if text:
                 full_text.append(text)
+            else:
+                logger.warning("No text transcribed for final fragment")
 
         meeting_text = " ".join(full_text)
-        if meeting_text:
-            end_time = datetime.now()
-            meeting = MeetingModel(
-                date_event=start_time,
-                time_start=start_time.time(),
-                time_end=end_time.time(),
-                text=meeting_text
-            )
-            db.add(meeting)
-            db.commit()
-            db.refresh(meeting)
-            logger.info("Saved meeting with ID %d", meeting.id)
+        if meeting_text and start_time and end_time:
+            try:
+                start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                meeting = MeetingModel(
+                    date_event=start_dt,
+                    time_start=start_dt.time(),
+                    time_end=end_dt.time(),
+                    text=meeting_text
+                )
+                db.add(meeting)
+                db.commit()
+                db.refresh(meeting)
+                logger.info("Saved meeting with ID %d, start_time: %s, end_time: %s", meeting.id, start_time, end_time)
+            except ValueError as e:
+                logger.error("Error parsing timestamps: %s", str(e))
+                await websocket.send_json({"error": "Invalid timestamp format"})
+                return
 
             for task in tasks:
                 db_task = TaskModel(
@@ -150,6 +178,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
 async def process_audio_fragment(audio_path: str, db: Session, employee_names: list, tasks: list, full_text: list, websocket: WebSocket, leader_id: int):
     wav_path = audio_path.replace(".webm", ".wav")
     try:
+        logger.info("Converting audio to WAV: %s, input size: %d bytes", audio_path, os.path.getsize(audio_path))
         subprocess.run(
             [
                 "ffmpeg", "-y", "-loglevel", "quiet", "-i", audio_path,
@@ -166,7 +195,7 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
             audio.export(wav_path, format="wav")
             logger.info("Audio processed with pydub")
         except Exception as e:
-            logger.error(f"Pydub processing error: %s", str(e))
+            logger.error("Pydub processing error: %s", str(e))
 
         model = whisper.load_model("small")
         result = model.transcribe(wav_path, language="ru", fp16=False, temperature=0.0)
@@ -222,13 +251,13 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
         return text
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"FFmpeg conversion error: %s", str(e))
+        logger.error("FFmpeg conversion error: %s", str(e))
         if websocket.state == 1:
             await websocket.send_json({"error": "Failed to convert audio"})
             logger.info("Sent FFmpeg error to client")
         return ""
     except Exception as e:
-        logger.error(f"Whisper transcription error: %s", str(e))
+        logger.error("Whisper transcription error: %s", str(e))
         if websocket.state == 1:
             await websocket.send_json({"error": str(e)})
             logger.info("Sent Whisper error to client")
