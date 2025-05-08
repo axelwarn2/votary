@@ -14,6 +14,10 @@ onMounted(async () => {
         console.error('Ошибка получения детальной информации собрания:', error);
     }
 });
+
+function getAudioDownloadUrl() {
+    return meeting.value.audio_path ? `http://localhost:8000/meetings/${route.params.id}/audio` : '#';
+}
 </script>
 
 <template>
@@ -32,7 +36,7 @@ onMounted(async () => {
 
             <div class="record-notes-detail__section record-notes-detail__section--download">
                 <p class="record-notes-detail__download-text">
-                    Скачать полную запись: <a href="#" class="record-notes-detail__link">Ссылка</a>
+                    Скачать полную запись: <a :href="getAudioDownloadUrl()" class="record-notes-detail__link">Ссылка</a>
                 </p>
             </div>
         </div>

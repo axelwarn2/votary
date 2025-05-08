@@ -20,10 +20,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TEMP_AUDIO_PATH = "/app/temp_audio_{}.webm"
+UPLOAD_DIR = "/app/backend/upload"
 FRAGMENT_DURATION = 30
 TRANSCRIPTION_FILE = "/app/transcription.txt"
 
 STOP_WORDS = {"стоп", "stop", "стап", "стоб"}
+
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
 @router.websocket("/record")
 async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: Session = Depends(get_db)):
@@ -58,6 +62,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
     end_time = None
     audio_file = None
     current_audio_path = None
+    final_audio_path = None
 
     try:
         while True:
@@ -71,11 +76,12 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
                 if audio_file:
                     audio_file.close()
                     audio_file = None
-                    text = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id)
+                    text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time)
                     if text:
                         full_text.append(text)
                     fragment_index += 1
                     current_audio_path = None
+                    final_audio_path = wav_path
 
             try:
                 msg = await asyncio.wait_for(websocket.receive(), timeout=600)
@@ -122,11 +128,12 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
 
         if current_audio_path and os.path.exists(current_audio_path):
             logger.info("Processing final audio fragment: %s, size: %d bytes", current_audio_path, os.path.getsize(current_audio_path))
-            text = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id)
+            text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time)
             if text:
                 full_text.append(text)
             else:
                 logger.warning("No text transcribed for final fragment")
+            final_audio_path = wav_path
 
         meeting_text = " ".join(full_text)
         if meeting_text and start_time and end_time:
@@ -137,12 +144,13 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
                     date_event=start_dt,
                     time_start=start_dt.time(),
                     time_end=end_dt.time(),
-                    text=meeting_text
+                    text=meeting_text,
+                    audio_path=final_audio_path
                 )
                 db.add(meeting)
                 db.commit()
                 db.refresh(meeting)
-                logger.info("Saved meeting with ID %d, start_time: %s, end_time: %s", meeting.id, start_time, end_time)
+                logger.info("Saved meeting with ID %d, start_time: %s, end_time: %s, audio_path: %s", meeting.id, start_time, end_time, final_audio_path)
             except ValueError as e:
                 logger.error("Error parsing timestamps: %s", str(e))
                 await websocket.send_json({"error": "Invalid timestamp format"})
@@ -167,16 +175,20 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
 
         logger.info("Cleaning up temporary files")
         for i in range(fragment_index + 1):
-            for path in [TEMP_AUDIO_PATH.format(i), TEMP_AUDIO_PATH.format(i).replace(".webm", ".wav")]:
-                if os.path.exists(path):
-                    os.remove(path)
+            temp_path = TEMP_AUDIO_PATH.format(i)
+            wav_path = temp_path.replace(".webm", ".wav")
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            if os.path.exists(wav_path) and wav_path != final_audio_path:
+                os.remove(wav_path)
 
         if websocket.state == 1:
             await websocket.close()
             logger.info("WebSocket closed by server")
 
-async def process_audio_fragment(audio_path: str, db: Session, employee_names: list, tasks: list, full_text: list, websocket: WebSocket, leader_id: int):
+async def process_audio_fragment(audio_path: str, db: Session, employee_names: list, tasks: list, full_text: list, websocket: WebSocket, leader_id: int, start_time: str = None):
     wav_path = audio_path.replace(".webm", ".wav")
+    final_wav_path = None
     try:
         logger.info("Converting audio to WAV: %s, input size: %d bytes", audio_path, os.path.getsize(audio_path))
         subprocess.run(
@@ -197,8 +209,19 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
         except Exception as e:
             logger.error("Pydub processing error: %s", str(e))
 
+        if start_time:
+            try:
+                start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                file_name = f"Собрание от {start_dt.strftime('%Y-%m-%d %H-%M-%S')}.wav"
+                final_wav_path = os.path.join(UPLOAD_DIR, file_name)
+                os.rename(wav_path, final_wav_path)
+                logger.info("Moved WAV file to: %s", final_wav_path)
+            except Exception as e:
+                logger.error("Error moving WAV file: %s", str(e))
+                final_wav_path = None
+
         model = whisper.load_model("small")
-        result = model.transcribe(wav_path, language="ru", fp16=False, temperature=0.0)
+        result = model.transcribe(wav_path if not final_wav_path else final_wav_path, language="ru", fp16=False, temperature=0.0)
         text = result["text"].strip()
         logger.info("Recognized text: %s", text)
 
@@ -248,18 +271,18 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
                         else:
                             logger.warning("Task text is empty for employee ID %d", emp_id)
 
-        return text
+        return text, final_wav_path
 
     except subprocess.CalledProcessError as e:
         logger.error("FFmpeg conversion error: %s", str(e))
         if websocket.state == 1:
             await websocket.send_json({"error": "Failed to convert audio"})
             logger.info("Sent FFmpeg error to client")
-        return ""
+        return "", None
     except Exception as e:
         logger.error("Whisper transcription error: %s", str(e))
         if websocket.state == 1:
             await websocket.send_json({"error": str(e)})
             logger.info("Sent Whisper error to client")
-        return ""
+        return "", None
     
