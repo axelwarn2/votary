@@ -18,7 +18,7 @@ onMounted(async () => {
 
 <template>
     <div class="record-notes-detail">
-        <h3 class="record-notes-detail__title">Собрание № {{ meeting.id }}</h3>
+        <h3 class="record-notes-detail__title">Собрание №{{ meeting.id }}</h3>
         <div class="record-notes-detail__content">
             <div class="record-notes-detail__section record-notes-detail__section--key-points">
                 <p class="record-notes-detail__section-title">Ключевые моменты</p>
