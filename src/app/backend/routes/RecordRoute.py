@@ -13,6 +13,7 @@ from backend.models.EmployeeModel import EmployeeModel
 from backend.models.MeetingModel import MeetingModel
 from backend.models.TaskModel import TaskModel, StatusEnum
 from backend.services.AuthService import get_current_user_from_session
+from backend.services.EmailService import EmailService
 
 router = APIRouter()
 
@@ -156,6 +157,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
                 await websocket.send_json({"error": "Invalid timestamp format"})
                 return
 
+            email_service = EmailService(db)
             for task in tasks:
                 db_task = TaskModel(
                     date_created=datetime.now(),
@@ -167,7 +169,18 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
                     leader_id=leader_id
                 )
                 db.add(db_task)
-            db.commit()
+                db.commit()
+                try:
+                    email_service.send_task_email(
+                        task_description=task["description"],
+                        employee_id=task["employee_id"],
+                        leader_id=leader_id,
+                        task_created=db_task.date_created
+                    )
+                    logger.info("Sent email for task to employee ID %d", task["employee_id"])
+                except Exception as e:
+                    logger.error("Failed to send email for task to employee ID %d: %s", task["employee_id"], str(e))
+            
             logger.info("Saved %d tasks", len(tasks))
 
             with open(TRANSCRIPTION_FILE, "a", encoding="utf-8") as f:

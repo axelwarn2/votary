@@ -13,6 +13,7 @@ class EmployeeStats(BaseModel):
     id: int
     surname: str
     name: str
+    email: str
     count_task: int
     complete: int
     expired: int

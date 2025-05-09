@@ -31,12 +31,13 @@ class EmployeeRepository:
                 EmployeeModel.id,
                 EmployeeModel.surname,
                 EmployeeModel.name,
+                EmployeeModel.email,
                 func.count(TaskModel.id).label("count_task"),
                 func.sum(case((TaskModel.status == StatusEnum.выполнена, 1), else_=0)).label("complete"),
                 func.sum(case((TaskModel.deadline < current_date, 1), else_=0)).label("expired"),
             )
             .outerjoin(TaskModel, EmployeeModel.id == TaskModel.employee_id)
-            .group_by(EmployeeModel.id, EmployeeModel.surname, EmployeeModel.name)
+            .group_by(EmployeeModel.id, EmployeeModel.surname, EmployeeModel.name, EmployeeModel.email)
         )
         result = self.db.execute(stmt).all()
 
@@ -45,6 +46,7 @@ class EmployeeRepository:
                 "id": row.id,
                 "surname": row.surname,
                 "name": row.name,
+                "email": row.email,
                 "count_task": row.count_task,
                 "complete": row.complete,
                 "expired": row.expired,
@@ -61,13 +63,14 @@ class EmployeeRepository:
                 EmployeeModel.id,
                 EmployeeModel.surname,
                 EmployeeModel.name,
+                EmployeeModel.email,
                 func.count(TaskModel.id).label("count_task"),
                 func.sum(case((TaskModel.status == StatusEnum.выполнена, 1), else_=0)).label("complete"),
                 func.sum(case((TaskModel.deadline < current_date, 1), else_=0)).label("expired"),
             )
             .outerjoin(TaskModel, EmployeeModel.id == TaskModel.employee_id)
             .where(EmployeeModel.id == employee_id)
-            .group_by(EmployeeModel.id, EmployeeModel.surname, EmployeeModel.name)
+            .group_by(EmployeeModel.id, EmployeeModel.surname, EmployeeModel.name, EmployeeModel.email)
         )
         result = self.db.execute(stmt).first()
 
@@ -75,6 +78,7 @@ class EmployeeRepository:
             "id": result.id,
             "surname": result.surname,
             "name": result.name,
+            "email": result.email,
             "count_task": result.count_task,
             "complete": result.complete,
             "expired": result.expired,
