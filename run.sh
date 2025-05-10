@@ -1,8 +1,5 @@
-#!/bin/bash
-
 echo "Запуск Docker (backend + DB)"
 
-# Проверяем, изменился ли requirements.txt
 if [ ! -f .requirements_hash ] || [ "$(sha256sum src/app/backend/requirements.txt)" != "$(cat .requirements_hash)" ]; then
     echo "requirements.txt изменился, пересобираем образ"
     docker compose down

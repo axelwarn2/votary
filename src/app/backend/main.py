@@ -4,7 +4,6 @@ from backend.routes import EmployeeRoute, MeetingRoute, TaskRoute, RecordRoute
 
 app = FastAPI()
 
-# Разрешаем CORS, чтобы frontend мог отправлять запросы
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
