@@ -7,7 +7,6 @@ class TaskRead(BaseModel):
     date_created: datetime
     deadline: Optional[datetime] = None
     description: str
-    mark: Optional[int] = None
     status: str
     employee_id: int
     meeting_id: int

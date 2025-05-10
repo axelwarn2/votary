@@ -13,7 +13,6 @@ class TaskModel(Base):
     date_created = Column(TIMESTAMP, nullable=False)
     deadline = Column(TIMESTAMP, nullable=True)
     description = Column(String(1000), nullable=False)
-    mark = Column(Integer, nullable=True)
     status = Column(Enum(StatusEnum), nullable=False)
     employee_id = Column(Integer, ForeignKey("Employee.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     meeting_id = Column(Integer, ForeignKey("Meeting.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)

@@ -71,7 +71,6 @@ const leader = computed(() => {
                         <p class="task-details__info-item">Крайний срок: {{ date_deadline }}</p>
                         <p class="task-details__info-item">Напоминание: установлено</p>
                         <p class="task-details__info-item">Поставлена: {{ date_production }}</p>
-                        <p class="task-details__info-item">Оценка: ☆☆☆☆☆</p>
                     </div>
 
                     <div class="task-details__participants">
