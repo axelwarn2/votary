@@ -411,6 +411,13 @@ html, body, #app {
     background-color: #0059AC;
 }
 
+.task-details__status--green {
+    background: linear-gradient(rgba(8, 166, 82, 1) 0%, rgba(68, 231, 32, 1) 64%, rgba(33, 186, 114, 1) 100%);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
 .task-details-main {
     display: flex;
     flex-direction: column;

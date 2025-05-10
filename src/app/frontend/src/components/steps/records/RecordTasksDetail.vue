@@ -62,8 +62,9 @@ const leader = computed(() => {
             </div>
 
             <div class="task-details">
-                <div class="task-details__status">
-                    <p class="task-details__status-text">Ждет выполнения с {{ date_created }}</p>
+                <div class="task-details__status" :class="{'task-details__status--green': task.status==='выполнена'}">
+                    <p v-if="task.status=='выполняется'" class="task-details__status-text">Ждет выполнения с {{ date_created }}</p>
+                    <p v-else class="task-details__status-text">Задача завершена</p>
                 </div>
 
                 <div class="task-details-main">
