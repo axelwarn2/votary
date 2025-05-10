@@ -2,7 +2,7 @@ from sqlalchemy import select, func, update
 from sqlalchemy.orm import aliased
 from backend.models.TaskModel import TaskModel, StatusEnum
 from backend.models.EmployeeModel import EmployeeModel
-from datetime import date
+from datetime import date, timedelta
 
 class TaskRepository:
     def __init__(self, db):
@@ -65,8 +65,9 @@ class TaskRepository:
             "leader_name": leader.name if leader else None
         }
     
-    def get_tasks_due_today(self):
+    def get_tasks_due_tomorrow(self):
         today = date.today()
+        tomorrow = today + timedelta(days=1)
         EmployeeResponsible = aliased(EmployeeModel, name="employee_responsible")
         EmployeeLeader = aliased(EmployeeModel, name="employee_leader")
 
@@ -75,7 +76,7 @@ class TaskRepository:
         ).join(
             EmployeeLeader, TaskModel.leader_id == EmployeeLeader.id, isouter=True
         ).where(
-            func.date(TaskModel.deadline) == today,
+            func.date(TaskModel.deadline) == tomorrow,
             TaskModel.status == StatusEnum.выполняется
         )
         result = self.db.execute(stmt).all()

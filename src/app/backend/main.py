@@ -34,11 +34,11 @@ async def start_scheduler():
     try:
         async def send_reminders():
             try:
-                db = next(get_db())  # Новая сессия для каждой итерации
+                db = next(get_db())
                 task_repo = TaskRepository(db)
                 email_service = EmailService(db)
-                tasks = task_repo.get_tasks_due_today()
-                logger.info(f"Found {len(tasks)} tasks due today: {[{'id': task['id'], 'status': task['status']} for task in tasks]}")
+                tasks = task_repo.get_tasks_due_tomorrow()
+                logger.info(f"Found {len(tasks)} tasks due tomorrow: {[{'id': task['id'], 'status': task['status']} for task in tasks]}")
                 for task in tasks:
                     try:
                         email_service.send_reminder_email(
@@ -57,7 +57,7 @@ async def start_scheduler():
 
         scheduler.add_job(
             send_reminders,
-            trigger=CronTrigger(hour=8, minute=0),
+            trigger=CronTrigger(minute="*/1"),
             id="send_reminders",
             replace_existing=True
         )

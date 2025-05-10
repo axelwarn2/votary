@@ -79,16 +79,16 @@ class EmailService:
         <html>
         <body style="font-family: Arial, sans-serif;">
             <h3>Уважаемый(ая) {employee['surname']} {employee['name']},</h3>
-            <p>Напоминаем, что сегодня истекает срок выполнения задачи:</p>
+            <p>Напоминаем, что скоро истекает срок выполнения задачи:</p>
             <p><strong>{task_description}</strong></p>
-            <p>Поставил задачу: {leader_name}</p>
             <p>Срок выполнения: {deadline.strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <p>Поставил задачу: {leader_name}</p>
             <p>
                 <a href="{complete_url}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                     Завершить задачу
                 </a>
             </p>
-            <p>С уважением,<br>{leader_name}</p>
+            <p>С уважением, {leader_name}</p>
         </body>
         </html>
         """
