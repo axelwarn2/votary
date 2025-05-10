@@ -14,6 +14,7 @@ from backend.models.MeetingModel import MeetingModel
 from backend.models.TaskModel import TaskModel, StatusEnum
 from backend.services.AuthService import get_current_user_from_session
 from backend.services.EmailService import EmailService
+from backend.utlis.text_formatting import TextNormalizer
 
 router = APIRouter()
 
@@ -56,6 +57,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
     employee_names = [(e.surname.lower(), e.name.lower(), e.id) for e in employees]
     logger.info("Loaded %d employees: %s", len(employees), employee_names)
 
+    normalizer = TextNormalizer()
     full_text = []
     tasks = []
     fragment_index = 0
@@ -77,7 +79,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
                 if audio_file:
                     audio_file.close()
                     audio_file = None
-                    text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time)
+                    text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time, normalizer)
                     if text:
                         full_text.append(text)
                     fragment_index += 1
@@ -129,7 +131,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
 
         if current_audio_path and os.path.exists(current_audio_path):
             logger.info("Processing final audio fragment: %s, size: %d bytes", current_audio_path, os.path.getsize(current_audio_path))
-            text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time)
+            text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time, normalizer)
             if text:
                 full_text.append(text)
             else:
@@ -161,7 +163,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
             for task in tasks:
                 db_task = TaskModel(
                     date_created=datetime.now(),
-                    deadline=datetime.now() + timedelta(days=7),
+                    deadline=task["deadline"],  # Используем извлечённый дедлайн
                     description=task["description"],
                     status=StatusEnum.выполняется,
                     employee_id=task["employee_id"],
@@ -199,7 +201,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
             await websocket.close()
             logger.info("WebSocket closed by server")
 
-async def process_audio_fragment(audio_path: str, db: Session, employee_names: list, tasks: list, full_text: list, websocket: WebSocket, leader_id: int, start_time: str = None):
+async def process_audio_fragment(audio_path: str, db: Session, employee_names: list, tasks: list, full_text: list, websocket: WebSocket, leader_id: int, start_time: str = None, normalizer: TextNormalizer = None):
     wav_path = audio_path.replace(".webm", ".wav")
     final_wav_path = None
     try:
@@ -274,10 +276,12 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
                             stop_index = min(i for i in stop_indices if i >= 0)
                             task_text = task_text[:stop_index].strip()
                         if task_text:
+                            deadline = normalizer.extract_deadline(task_text)
                             task = {
                                 "employee_id": emp_id,
                                 "description": task_text,
-                                "leader_id": leader_id
+                                "leader_id": leader_id,
+                                "deadline": deadline
                             }
                             tasks.append(task)
                             logger.info("Task created for employee ID %d: %s, leader_id=%d", emp_id, task_text, leader_id)

@@ -13,6 +13,9 @@ fi
 echo "Docker-контейнеры запущены"
 
 echo "Запуск Electron + Vue"
-cd src && npm run dev
+cd src
+npm run dev:frontend &
+sleep 5
+npm run dev:electron
 
 echo "Все запущено успешно!"
