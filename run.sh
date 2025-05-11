@@ -14,6 +14,9 @@ echo "Docker-контейнеры запущены"
 
 echo "Запуск Electron + Vue"
 cd src
+
+pkill -f "vite" || true
+
 npm run dev:frontend &
 sleep 5
 npm run dev:electron

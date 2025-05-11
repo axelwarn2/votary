@@ -50,7 +50,10 @@ class EmployeeRepository:
                 "count_task": row.count_task,
                 "complete": row.complete,
                 "expired": row.expired,
-                "efficiency": f"{random.randint(10, 100)}%"
+                "efficiency": (
+                    f"{round(100 - (row.expired / row.count_task) * 100)}%"
+                    if row.count_task != 0 else "100%"
+                )
             }
             for row in result
         ]
@@ -82,5 +85,8 @@ class EmployeeRepository:
             "count_task": result.count_task,
             "complete": result.complete,
             "expired": result.expired,
-            "efficiency": f"{random.randint(10, 100)}%"
+            "efficiency": (
+                f"{round(100 - (result.expired / result.count_task) * 100)}%"
+                if result.count_task != 0 else "100%"
+            )
         }
