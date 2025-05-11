@@ -57,7 +57,7 @@ async def start_scheduler():
 
         scheduler.add_job(
             send_reminders,
-            trigger=CronTrigger(minute="*/1"),
+            trigger=CronTrigger(hour=8, minute=0),
             id="send_reminders",
             replace_existing=True
         )

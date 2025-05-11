@@ -1,19 +1,18 @@
 <script setup>
 import { computed, ref, watch } from "vue";
+import axios from "axios";
 import { validateForm } from "../../../assets/validation.js";
 
 const formData = ref({
-    companyName: '',
     email: '',
 });
 
 const errors = ref({
-    companyName: '',
     email: '',
+    general: '',
 });
 
 const fieldsConfig = {
-    companyName: { required: true, label: "Наименование компании" },
     email: { required: true, isEmail: true, label: "Email" },
 };
 
@@ -28,15 +27,29 @@ watch(formData, () => {
 }, { deep: true });
 
 const hasError = computed(() => {
-   return Object.values(errors.value).some(error => error !== '');
+    return Object.values(errors.value).some(error => error !== '');
 });
 
-const submitLink = () => {
+const submitLink = async () => {
     validatesForm();
     isFormSubmit.value = true;
 
     if (hasError.value) {
         return;
+    }
+
+    try {
+        await axios.post("http://localhost:8000/invitation", {
+            email: formData.value.email,
+        }, {
+            headers: { "Cookie": `session_id=${document.cookie.split('session_id=')[1]?.split(';')[0]}` }
+        });
+        formData.value.email = '';
+        isFormSubmit.value = false;
+        errors.value.general = "Приглашение успешно отправлено!";
+    } catch (error) {
+        console.error("Ошибка при отправке приглашения:", error);
+        errors.value.general = error.response?.data?.detail || "Ошибка отправки приглашения";
     }
 };
 </script>
@@ -50,17 +63,14 @@ const submitLink = () => {
                 <form class="form__element" @submit.prevent="submitLink">
                     <div class="form__fields">
                         <div class="form__field">
-                            <h3 class="form__field-title">Наименование компании</h3>
-                            <input class="form__input" :class="{'form__input--error': errors.companyName}" type="text" v-model="formData.companyName"/>
-                            <p class="form__error" v-if="errors.companyName">{{ errors.companyName }}</p>
-                        </div>
-
-                        <div class="form__field">
                             <h3 class="form__field-title">Email</h3>
                             <input class="form__input" :class="{'form__input--error': errors.email}" type="email" v-model="formData.email"/>
                             <p class="form__error" v-if="errors.email">{{ errors.email }}</p>
                         </div>
                     </div>
+
+                    <p class="form__error" v-if="errors.general && errors.general.includes('Ошибка')">{{ errors.general }}</p>
+                    <p class="form__success" v-else-if="errors.general">{{ errors.general }}</p>
 
                     <button class="form__submit"
                             type="submit"
@@ -78,3 +88,11 @@ const submitLink = () => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.form__success {
+    color: green;
+    font-size: 14px;
+    margin-top: 10px;
+}
+</style>
