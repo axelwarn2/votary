@@ -57,7 +57,7 @@ class EmployeeRepository:
             }
             for row in result
         ]
-        return employees_stats
+        return sorted(employees_stats, key = lambda x: x["id"])
 
     def get_employee_by_id(self, employee_id):
         current_date = date.today()

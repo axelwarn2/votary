@@ -152,7 +152,7 @@ function stopStream() {
       <div :class="['record-button__icon--off', isRecording ? 'record-button__icon--on' : '']"></div>
     </button>
     <p class="record-button__status">
-      {{ isRecording ? 'Микрофон включен' : (isProcessing ? 'Обработка...' : 'Микрофон выключен') }}
+      {{ isRecording ? 'Микрофон включен' : 'Микрофон выключен' }}
     </p>
   </div>
 </template>

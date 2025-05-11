@@ -36,7 +36,7 @@ class TaskRepository:
             }
             for task, employee, leader in result
         ]
-        return tasks
+        return sorted(tasks, key=lambda x: x["id"])
 
     def get_task_by_id(self, task_id):
         EmployeeResponsible = aliased(EmployeeModel, name="employee_responsible")
