@@ -12,3 +12,4 @@ transformers==4.44.2
 torch==2.3.1
 dateparser==1.2.0
 sentencepiece==0.2.0
+bcrypt==4.2.0

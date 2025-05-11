@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Response, Cookie, HTTPException
-from backend.schemas.EmployeeSchem import EmployeeCreate, EmployeeStats, EmployeeLogin
+from backend.schemas.EmployeeSchem import EmployeeCreate, EmployeeStats, EmployeeLogin, PasswordResetRequest
 from backend.schemas.InvitationRegister import InvitationCreate
 from backend.models.EmployeeModel import EmployeeModel
 from backend.services.EmailService import EmailService
@@ -56,3 +56,15 @@ def create_invitation(invitation: InvitationCreate, session_id: Optional[str] = 
     email_service.send_invitation_email(invitation.email, user["id"])
 
     return {"message": f"Invitation sent to {invitation.email}"}
+
+@router.post("/password/reset")
+def reset_password(request: PasswordResetRequest, db: Session = Depends(get_db)):
+    employee_repo = EmployeeRepository(db)
+    employee = employee_repo.get_employee_by_email(request.email)
+    if not employee:
+        raise HTTPException(status_code=404, detail="Сотрудника с указанной почтой не существует")
+    if employee.role != "руководитель":
+        raise HTTPException(status_code=403, detail="Только руководитель может изменить пароль")
+
+    employee_repo.update_employee_password(employee.id, request.password)
+    return {"message": "Пароль успешно изменен"}

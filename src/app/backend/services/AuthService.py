@@ -1,13 +1,14 @@
 from fastapi import HTTPException
 from backend.utlis.session import create_session, get_session, delete_session
 from backend.models.EmployeeModel import EmployeeModel
+import bcrypt
 
 def login_in_program(login_data, response, db):
     employee = db.query(EmployeeModel).filter(EmployeeModel.email == login_data.email).first()
     if not employee:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    if employee.password != login_data.password:
+    if not bcrypt.checkpw(login_data.password.encode('utf-8'), employee.password.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     session_id = create_session({

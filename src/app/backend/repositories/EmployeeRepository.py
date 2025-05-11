@@ -2,7 +2,7 @@ from backend.models.EmployeeModel import EmployeeModel
 from backend.models.TaskModel import TaskModel, StatusEnum
 from sqlalchemy import select, func, case
 from datetime import date
-import random
+import bcrypt
 
 class EmployeeRepository:
     def __init__(self, db):
@@ -14,7 +14,7 @@ class EmployeeRepository:
             name = employee.name,
             lastname = employee.lastname,
             email = employee.email,
-            password = employee.password,
+            password = bcrypt.hashpw(employee.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
             role = employee.role
         )
 
@@ -57,7 +57,7 @@ class EmployeeRepository:
             }
             for row in result
         ]
-        return sorted(employees_stats, key = lambda x: x["id"])
+        return sorted(employees_stats, key=lambda x: x["id"])
 
     def get_employee_by_id(self, employee_id):
         current_date = date.today()
@@ -90,3 +90,14 @@ class EmployeeRepository:
                 if result.count_task != 0 else "100%"
             )
         }
+
+    def get_employee_by_email(self, email: str):
+        return self.db.query(EmployeeModel).filter(EmployeeModel.email == email).first()
+
+    def update_employee_password(self, employee_id: int, new_password: str):
+        employee = self.db.query(EmployeeModel).filter(EmployeeModel.id == employee_id).first()
+        if not employee:
+            return None
+        employee.password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        self.db.commit()
+        return employee

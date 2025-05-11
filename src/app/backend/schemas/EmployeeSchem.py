@@ -25,3 +25,8 @@ class EmployeeStats(BaseModel):
 class EmployeeLogin(BaseModel):
     email: str
     password: str
+
+class PasswordResetRequest(BaseModel):
+    email: str
+    password: str
+    password_confirm: str
