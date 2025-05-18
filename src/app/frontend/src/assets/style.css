@@ -11,7 +11,7 @@ html, body, #app {
 .votary-app {
     display: flex;
     flex-direction: row;
-    background-color: rgba(23, 23, 23, 1);
+    background-color: #fff;
     font-family: 'Inter', sans-serif;
     overflow: hidden;
 }
@@ -23,9 +23,8 @@ html, body, #app {
     height: 100vh;
     padding: 16px 0 0 22px;
     gap: 64px;
-    border-right-color: rgba(80, 80, 80, 1);
-    border-right-style: solid;
-    background-color: rgba(35, 34, 34, 1);
+    border-inline-end: 1px solid rgba(0, 0, 0, .15);
+    background-color: rgba(60, 60, 67, .03);
 }
 
 .logo {
@@ -43,7 +42,7 @@ html, body, #app {
 }
 
 .logo__title {
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     font-size: 32px;
     font-weight: 500;
 }
@@ -64,7 +63,7 @@ html, body, #app {
 
 .isActive {
     border-radius: 8px;
-    background-color: rgba(235, 235, 245, 0.1);
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .left-panel__item-image--record, .left-panel__item-image--note,
@@ -86,7 +85,7 @@ html, body, #app {
 }
 
 .left-panel__item-text {
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     font-size: 20px;
     font-weight: 400;
     background-color: rgba(28, 28, 28, 0);
@@ -125,7 +124,7 @@ html, body, #app {
 .form__title {
     font-size: 28px;
     font-weight: 100;
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     text-align: center;
 }
 
@@ -156,16 +155,16 @@ html, body, #app {
 .form__field-title {
     font-size: 18px;
     font-weight: 100;
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
 }
 
 .form__input {
     font-size: 18px;
     padding: 14px 12px;
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     background-color: rgba(0, 0, 0, 0);
     border-radius: 5px;
-    border: 1px solid #FFFFFF;
+    border: 1px solid #000000;
 }
 
 .form__input--error {
@@ -180,7 +179,7 @@ html, body, #app {
     width: 100%;
     padding: 13px 0;
     font-size: 18px;
-    color: #FFFFFF;
+    color: #fff;
     background-color: #0059AC;
     border-radius: 20px;
     border: none;
@@ -202,7 +201,7 @@ html, body, #app {
 }
 
 .form__text, .form__link {
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     font-size: 18px;
     text-align: center;
 }
@@ -248,7 +247,7 @@ html, body, #app {
 }
 
 .record-button__status {
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     font-size: 26px;
     font-weight: 100;
 }
@@ -261,7 +260,7 @@ html, body, #app {
 }
 
 .record-notes__title, .record-notes-detail__title {
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     font-size: 32px;
     font-weight: 300;
 }
@@ -287,18 +286,18 @@ html, body, #app {
 }
 
 .record-notes__item:nth-child(odd) {
-    background-color: #232222;
+    background-color: rgba(232, 232, 232, 0.995);
 }
 
 .record-notes__header-item {
-    color: #8B8B8B;
+    color: rgba(0, 0, 0, .56);
     font-size: 16px;
     font-weight: 100;
     position: relative;
 }
 
 .record-notes__item-text {
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     font-weight: 100;
     text-align: left;
     position: relative;
@@ -326,16 +325,25 @@ html, body, #app {
     display: flex;
     flex-direction: column;
     padding: 12px 25px 24px 20px;
-    background-color: #232222;
+    background-color: rgba(245, 245, 245, 0.995);
     position: relative;
     max-height: 554px;
     min-width: 70%;
 }
 
 .record-notes-detail__section {
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     font-size: 18px;
     font-weight: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.record-notes-detail__section-link {
+    text-decoration: none;
+    color: #0059AC;
+    font-size: 16px;
 }
 
 .record-notes-detail__section--key-points {
@@ -350,7 +358,7 @@ html, body, #app {
     left: -20px;
     right: -25px;
     height: 1px;
-    background-color: rgba(235, 235, 245, 0.1);
+    background-color: rgba(191, 191, 191, .88);
 }
 
 .record-notes-detail__section--text {
@@ -380,7 +388,7 @@ html, body, #app {
     left: -20px;
     right: -25px;
     height: 1px;
-    background-color: rgba(235, 235, 245, 0.1);
+    background-color: rgba(191, 191, 191, .88);
 }
 
 .record-notes-detail__link {
@@ -397,8 +405,8 @@ html, body, #app {
 .task-details {
     display: flex;
     flex-direction: column;
-    color: #FFFFFF;
-    background-color: #232222;
+    color: rgba(0, 0, 0, .88);
+    background-color: rgba(245, 245, 245, 0.995);
     width: 268px;
     flex: 0 0 268px;
     position: relative;
@@ -433,8 +441,12 @@ html, body, #app {
 
 .task-details__info-item {
     position: relative;
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     font-size: 16px;
+}
+
+.task-details__status-text {
+    color: #fff;
 }
 
 .task-details__info-item::after {
@@ -444,7 +456,7 @@ html, body, #app {
     left: 0;
     right: 0;
     height: 1px;
-    background-color: rgba(235, 235, 245, 0.1);
+    background-color: rgba(191, 191, 191, .88);
 }
 
 .task-details__participants {
@@ -477,7 +489,7 @@ html, body, #app {
     left: 0;
     right: 0;
     height: 1px;
-    background-color: rgba(235, 235, 245, 0.1);
+    background-color: rgba(191, 191, 191, .88);
 }
 
 .task-details__avatar {
@@ -497,12 +509,12 @@ html, body, #app {
 .efficiency-stats__overview {
     grid-column: span 4 / span 4;
     grid-row: span 4 / span 4;
-    background-color: rgba(35, 34, 34, 1);
+    background-color: rgba(245, 245, 245, 0.995);
 }
 
 .efficiency-stats__overview-title {
     font-size: 20px;
-    color: #FFFFFF;
+    color: rgba(0, 0, 0, .88);
     position: relative;
 }
 
@@ -513,7 +525,7 @@ html, body, #app {
     left: 0;
     right: 0;
     height: 1px;
-    background-color: rgba(235, 235, 245, 0.1);
+    background-color: rgba(191, 191, 191, .88);
 }
 
 .efficiency-stats__overview {
@@ -547,7 +559,7 @@ html, body, #app {
 .efficiency-stats__circle--second {
     width: 90%;
     height: 90%;
-    background-color: #FFFFFF;
+    background-color: #fff;
     position: relative;
     overflow: hidden;
 }
@@ -652,13 +664,13 @@ html, body, #app {
 .efficiency-stats__in-progress-title, .efficiency-stats__completed-title,
 .efficiency-stats__overdue-title {
     font-size: 20px;
-    color: #FFFFFF;
+    color: #fff;
 }
 
 .efficiency-stats__in-progress-value, .efficiency-stats__completed-value,
 .efficiency-stats__overdue-value {
     font-size: 64px;
-    color: #FFFFFF;
+    color: #fff;
     position: absolute;
     bottom: 0;
     right: 26px;

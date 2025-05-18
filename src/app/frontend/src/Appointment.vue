@@ -47,21 +47,21 @@ onMounted(() => {
         align-items: center;
         gap: 12px;
         text-align: center;
-        border: 2px solid #FFFFFF;
+        border: 2px solid #000000;
         padding: 60px 40px;
-        box-shadow: 3px 3px 4px #FFFFFF;
+        box-shadow: 3px 3px 4px #000000;
     }
 
     .access__title {
         font-size: 44px;
-        background: linear-gradient(0.25turn, #FBFBFB, #C8C8C8, #7C7C7C);
+        background: linear-gradient(0.25turn, #000000, #343434, #131212);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
     .access__description {
         font-size: 20px;
-        background: linear-gradient(0.25turn, #7C7C7C, #8E8E8E, #FFFFFF);
+        background: linear-gradient(0.25turn, #000000, #343434, #131212);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }

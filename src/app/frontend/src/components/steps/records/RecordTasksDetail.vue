@@ -50,6 +50,7 @@ const leader = computed(() => {
             <div class="record-notes-detail__content">
                 <div class="record-notes-detail__section record-notes-detail__section--key-points">
                     <p class="record-notes-detail__section-title">Задача №{{ task.id }} - {{ task.status }}</p>
+                    <a class="record-notes-detail__section-link">Изменить</a>
                 </div>
                 <div class="record-notes-detail__section record-notes-detail__section--text">
                     <p class="record-notes-detail__text">{{ task.description }}</p>

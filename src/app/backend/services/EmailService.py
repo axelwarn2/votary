@@ -74,7 +74,7 @@ class EmailService:
         complete_url = f"{self.base_url}/tasks/{task_id}/complete"
         logger.info(f"Complete URL: {complete_url}")
 
-        subject = "Напоминание: Завершите задачу сегодня"
+        subject = "Напоминание: Завершите задачу"
         html_body = f"""
         <html>
         <body style="font-family: Arial, sans-serif;">

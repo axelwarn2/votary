@@ -26,6 +26,7 @@ function getAudioDownloadUrl() {
         <div class="record-notes-detail__content">
             <div class="record-notes-detail__section record-notes-detail__section--key-points">
                 <p class="record-notes-detail__section-title">Ключевые моменты</p>
+                <a class="record-notes-detail__section-link">Изменить</a>
             </div>
 
             <div class="record-notes-detail__section record-notes-detail__section--text">

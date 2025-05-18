@@ -26,7 +26,7 @@ export default {
 <template>
     <div class="left-border">
         <div class="logo" @click="goToHome">
-            <div class="logo__image"></div>
+            <div class="logo__image"><img src="../assets/images/logo.svg" alt=""></div>
             <h1 class="logo__title">Votary</h1>
         </div>
 
