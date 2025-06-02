@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routes import EmployeeRoute, MeetingRoute, TaskRoute, RecordRoute
+from backend.routes import EmployeeRoute, MeetingRoute, TaskRoute, RecordRoute, ProjectRoute
 from backend.repositories.TaskRepository import TaskRepository
 from backend.services.EmailService import EmailService
 from backend.utlis.db import get_db
@@ -23,6 +23,7 @@ app.include_router(EmployeeRoute.router)
 app.include_router(MeetingRoute.router)
 app.include_router(TaskRoute.router)
 app.include_router(RecordRoute.router)
+app.include_router(ProjectRoute.router)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -77,3 +78,4 @@ async def shutdown_event():
     logger.info("Shutdown event triggered")
     scheduler.shutdown()
     logger.info("Scheduler shutdown")
+    

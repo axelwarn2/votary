@@ -9,6 +9,7 @@ import RecordTasksDetail from "./components/steps/records/RecordTasksDetail.vue"
 import RecordStatisticDetail from "./components/steps/records/RecordStatisticDetail.vue";
 import FormAddEmployeeLink from "./components/steps/forms-add/FormAddEmployeeLink.vue";
 import FormAddEmployee from "./components/steps/forms-add/FormAddEmployee.vue";
+import TaskReport from "./components/steps/records/TaskReport.vue";
 import axios from "axios";
 
 const routes = [
@@ -72,6 +73,13 @@ const routes = [
         path: "/statistics/:id",
         name: "RecordStatisticDetail",
         component: RecordStatisticDetail,
+        props: true,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/report/:employee_id",
+        name: "TaskReport",
+        component: TaskReport,
         props: true,
         meta: { requiresAuth: true },
     },

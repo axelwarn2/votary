@@ -12,9 +12,11 @@ from backend.utlis.db import get_db
 from backend.models.EmployeeModel import EmployeeModel
 from backend.models.MeetingModel import MeetingModel
 from backend.models.TaskModel import TaskModel, StatusEnum
+from backend.models.KeywordModel import KeywordModel
 from backend.services.AuthService import get_current_user_from_session
 from backend.services.EmailService import EmailService
 from backend.utlis.text_formatting import TextNormalizer
+from backend.repositories.TaskRepository import TaskRepository
 
 router = APIRouter()
 
@@ -25,8 +27,6 @@ TEMP_AUDIO_PATH = "/app/temp_audio_{}.webm"
 UPLOAD_DIR = "/app/backend/upload"
 FRAGMENT_DURATION = 30
 TRANSCRIPTION_FILE = "/app/transcription.txt"
-
-STOP_WORDS = {"стоп", "stop", "стап", "стоб"}
 
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
@@ -55,9 +55,13 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
 
     employees = db.query(EmployeeModel).all()
     employee_names = [(e.surname.lower(), e.name.lower(), e.id) for e in employees]
+    keywords = db.query(KeywordModel).all()
+    keyword_map = {k.word.lower(): k.action for k in keywords}
     logger.info("Loaded %d employees: %s", len(employees), employee_names)
+    logger.info("Loaded %d keywords: %s", len(keywords), keyword_map)
 
     normalizer = TextNormalizer()
+    task_repo = TaskRepository(db)
     full_text = []
     tasks = []
     fragment_index = 0
@@ -79,7 +83,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
                 if audio_file:
                     audio_file.close()
                     audio_file = None
-                    text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time, normalizer)
+                    text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time, normalizer, keyword_map, task_repo)
                     if text:
                         full_text.append(text)
                     fragment_index += 1
@@ -131,7 +135,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
 
         if current_audio_path and os.path.exists(current_audio_path):
             logger.info("Processing final audio fragment: %s, size: %d bytes", current_audio_path, os.path.getsize(current_audio_path))
-            text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time, normalizer)
+            text, wav_path = await process_audio_fragment(current_audio_path, db, employee_names, tasks, full_text, websocket, leader_id, start_time, normalizer, keyword_map, task_repo)
             if text:
                 full_text.append(text)
             else:
@@ -163,12 +167,13 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
             for task in tasks:
                 db_task = TaskModel(
                     date_created=datetime.now(),
-                    deadline=task["deadline"],  # Используем извлечённый дедлайн
+                    deadline=task["deadline"],
                     description=task["description"],
                     status=StatusEnum.выполняется,
                     employee_id=task["employee_id"],
                     meeting_id=meeting.id,
-                    leader_id=leader_id
+                    leader_id=leader_id,
+                    project_id=task.get("project_id")
                 )
                 db.add(db_task)
                 db.commit()
@@ -201,7 +206,7 @@ async def record_audio(websocket: WebSocket, session_id: str = Query(...), db: S
             await websocket.close()
             logger.info("WebSocket closed by server")
 
-async def process_audio_fragment(audio_path: str, db: Session, employee_names: list, tasks: list, full_text: list, websocket: WebSocket, leader_id: int, start_time: str = None, normalizer: TextNormalizer = None):
+async def process_audio_fragment(audio_path: str, db: Session, employee_names: list, tasks: list, full_text: list, websocket: WebSocket, leader_id: int, start_time: str = None, normalizer: TextNormalizer = None, keyword_map: dict = None, task_repo: TaskRepository = None):
     wav_path = audio_path.replace(".webm", ".wav")
     final_wav_path = None
     try:
@@ -249,7 +254,7 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
             words = text.split()
             for word in words:
                 current_sentence.append(word)
-                if word.lower() in STOP_WORDS:
+                if word.lower() in keyword_map:
                     sentences.append(" ".join(current_sentence))
                     current_sentence = []
             if current_sentence:
@@ -260,6 +265,38 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
             for sentence in sentences:
                 sentence_lower = sentence.lower()
                 logger.info("Processing sentence: %s", sentence)
+                
+                # Проверяем наличие ключевых слов
+                action = None
+                task_id = None
+                for keyword, act in keyword_map.items():
+                    if keyword in sentence_lower:
+                        action = act
+                        # Извлекаем ID задачи, если есть
+                        words = sentence_lower.split()
+                        for i, word in enumerate(words):
+                            if word.isdigit() and i > 0 and words[i-1].lower() == "задача":
+                                task_id = int(word)
+                                break
+                        break
+
+                if action in ["append", "update", "delete"] and task_id:
+                    task_text = sentence[sentence_lower.find(keyword) + len(keyword):].strip()
+                    if action == "append":
+                        success = task_repo.append_task(task_id, task_text)
+                        if success:
+                            logger.info("Appended task %d: %s", task_id, task_text)
+                    elif action == "update":
+                        success = task_repo.update_task(task_id, task_text)
+                        if success:
+                            logger.info("Updated task %d: %s", task_id, task_text)
+                    elif action == "delete":
+                        success = task_repo.delete_task(task_id)
+                        if success:
+                            logger.info("Deleted task %d", task_id)
+                    continue
+
+                # Обработка создания новой задачи
                 for surname, name, emp_id in employee_names:
                     if surname in sentence_lower or name in sentence_lower:
                         logger.info("Found employee: surname=%s, name=%s, emp_id=%d", surname, name, emp_id)
@@ -271,7 +308,7 @@ async def process_audio_fragment(audio_path: str, db: Session, employee_names: l
                             continue
                         task_text = sentence[start_index:]
                         task_text_lower = task_text.lower()
-                        stop_indices = [task_text_lower.find(stop_word) for stop_word in STOP_WORDS if stop_word in task_text_lower]
+                        stop_indices = [task_text_lower.find(keyword) for keyword, act in keyword_map.items() if act == "stop" and keyword in task_text_lower]
                         if stop_indices:
                             stop_index = min(i for i in stop_indices if i >= 0)
                             task_text = task_text[:stop_index].strip()

@@ -15,6 +15,7 @@ class TaskRead(BaseModel):
     leader_id: int
     leader_surname: str
     leader_name: str
+    project_id: Optional[int]
 
     class Config:
         orm_mode = True

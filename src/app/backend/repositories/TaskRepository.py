@@ -32,7 +32,8 @@ class TaskRepository:
                 "employee_name": employee.name,
                 "leader_id": task.leader_id,
                 "leader_surname": leader.surname,
-                "leader_name": leader.name
+                "leader_name": leader.name,
+                "project_id": task.project_id
             }
             for task, employee, leader in result
         ]
@@ -62,7 +63,8 @@ class TaskRepository:
             "employee_name": employee.name,
             "leader_id": task.leader_id,
             "leader_surname": leader.surname if leader else None,
-            "leader_name": leader.name if leader else None
+            "leader_name": leader.name if leader else None,
+            "project_id": task.project_id
         }
     
     def get_tasks_due_tomorrow(self):

@@ -12,17 +12,31 @@ const props = defineProps({
 const store = useStore();
 const router = useRouter();
 const isLoading = ref(false);
+const employeeNameFilter = ref('');
+const dateFilter = ref('');
+const projectFilter = ref(null);
+const projects = ref([]);
 
 const loadData = async () => {
     isLoading.value = true;
 
     try {
         if (props.isTasks) {
-            await store.dispatch('fetchTasks');
+            const params = {};
+            if (employeeNameFilter.value) params.employee_name = employeeNameFilter.value;
+            if (dateFilter.value) params.date_filter = dateFilter.value;
+            if (projectFilter.value) params.project_id = projectFilter.value;
+            const response = await axios.get('http://localhost:8000/tasks', { params });
+            store.commit('setTasks', response.data);
         } else if (props.isStatistics) {
             await store.dispatch('fetchStatistics');
         } else {
             await store.dispatch('fetchMeetings');
+        }
+
+        if (props.isTasks) {
+            const projectResponse = await axios.get('http://localhost:8000/projects');
+            projects.value = projectResponse.data;
         }
     } finally {
         isLoading.value = false;
@@ -32,7 +46,7 @@ const loadData = async () => {
 onMounted(loadData);
 
 watch(
-    () => [props.isTasks, props.isStatistics],
+    () => [props.isTasks, props.isStatistics, employeeNameFilter.value, dateFilter.value, projectFilter.value],
     () => {
         loadData();
     }

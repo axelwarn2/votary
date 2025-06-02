@@ -16,3 +16,6 @@ sentencepiece==0.2.0
 bcrypt==4.2.0
 jiwer==3.0.4
 pandas
+pydantic==2.11.0
+mysqlclient==2.2.4
+python-dateutil==2.9.0

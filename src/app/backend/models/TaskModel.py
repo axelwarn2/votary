@@ -17,4 +17,5 @@ class TaskModel(Base):
     employee_id = Column(Integer, ForeignKey("Employee.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     meeting_id = Column(Integer, ForeignKey("Meeting.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     leader_id = Column(Integer, ForeignKey("Employee.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    project_id = Column(Integer, ForeignKey("Project.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
     
