@@ -11,7 +11,7 @@ WORKDIR /app
 
 COPY ./src/app/backend/requirements.txt /app/backend/requirements.txt
 
-RUN pip install --upgrade pip && pip install --no-cache-dir -r backend/requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r backend/requirements.txt && rm -rf /var/lib/apt/lists/*
 
 COPY ./src/app/ /app
 

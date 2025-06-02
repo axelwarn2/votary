@@ -25,7 +25,7 @@ INSERT INTO `Employee` (`id`, `surname`, `name`, `lastname`, `email`, `password`
 (1,	'Пятков',	'Константин',	'Владиславович',	'722shock722@mail.ru',	'$2b$12$mcaLB13KznkOyezuyaIzc.5CkQa0AKbpjm/Jyzy/Th85B9Jb1Kj3u',	'руководитель'),
 (2,	'Андреев',	'Андрей',	'Андреевич',	'test@mail.ru',	'$2b$12$tLrQazp9xrXnqfWagQ9FC.6d0GXSZivSmzcQO6uhDvZBA7K/Rmr7W',	'исполнитель'),
 (3,	'Евгеньев',	'Евгений',	'Евгеньевич',	'axelwarn@gmail.com',	'$2b$12$3v7li3C1LWPpUsizxcd.G.DgI/SRbQzwwoNtayEjAONcTd.zJxHO6',	'исполнитель'),
-(4,	'Афанасьеф ',	'Михаил',	'Всеволодович',	'sigon@gmail.com',	'$2b$12$9yZS7jrwIzNWwp/StYl2FOk8e1R8kOKdvyRSBwUNEyuoNNG5ZgWn.',	'исполнитель'),
+(4,	'Афанасьеф',	'Михаил',	'Всеволодович',	'sigon@gmail.com',	'$2b$12$9yZS7jrwIzNWwp/StYl2FOk8e1R8kOKdvyRSBwUNEyuoNNG5ZgWn.',	'исполнитель'),
 (5,	'Стражков',	'Всеволод',	'Денисович',	'mabenesu@mail.ru',	'$2b$12$syqfnZnKxbTHNCuSeFW9wOASniNQvxVys2Hdsz2.Q0iGGv4QIlDSq',	'исполнитель'),
 (6,	'Емшанов',	'Максим',	'Денисович',	'jiwigino@gmail.com',	'$2b$12$R2QzOvQ9/TIUARsxJEswWeq0I73Kfl5vZ/9EhhIHzCFM6ia1ZID5O',	'исполнитель'),
 (7,	'Надарян',	'Гор',	'Давитович',	'nadaryan@mail.ru',	'$2b$12$6lk6dwcLJA2A0YOosVd4xultMWYoq0aRIGX.gNj8P9GSCl7AAZa7m',	'исполнитель'),

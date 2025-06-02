@@ -4,6 +4,7 @@ sqlalchemy
 pymysql
 python-dotenv
 openai-whisper==20231117 
+whisper==1.1.10
 pydub==0.25.1 
 numpy==1.26.4 
 cryptography==43.0.1
@@ -13,3 +14,5 @@ torch==2.3.1
 dateparser==1.2.0
 sentencepiece==0.2.0
 bcrypt==4.2.0
+jiwer==3.0.4
+pandas
