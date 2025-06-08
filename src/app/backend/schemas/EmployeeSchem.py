@@ -18,14 +18,14 @@ class EmployeeStats(BaseModel):
     name: str
     email: str
     count_task: int
-    completed: int  # Исправлено с complete на completed
+    completed: int
     expired: int
     efficiency: str
     is_on_sick_leave: Optional[bool] = False
     is_on_vacation: Optional[bool] = False
 
     class Config:
-        from_attributes = True  # Обновлено для Pydantic v2
+        from_attributes = True
 
 class EmployeeRead(BaseModel):
     id: int
@@ -34,7 +34,7 @@ class EmployeeRead(BaseModel):
     lastname: Optional[str]
     email: str
     count_task: int
-    completed: int  # Исправлено с complete на completed
+    completed: int
     expired: int
     efficiency: str
     is_on_sick_leave: Optional[bool] = False

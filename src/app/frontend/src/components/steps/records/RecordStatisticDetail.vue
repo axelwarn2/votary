@@ -43,7 +43,7 @@ const name = computed(() => {
             </div>
             <div class="efficiency-stats__completed">
                 <h3 class="efficiency-stats__completed-title">Завершено</h3>
-                <p class="efficiency-stats__completed-value">{{ statistic.complete }}</p>
+                <p class="efficiency-stats__completed-value">{{ statistic.completed }}</p>
             </div>
             <div class="efficiency-stats__overdue">
                 <h3 class="efficiency-stats__overdue-title">Просрочено</h3>

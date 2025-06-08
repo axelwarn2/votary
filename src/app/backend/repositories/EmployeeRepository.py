@@ -69,7 +69,8 @@ class EmployeeRepository:
 
         employees_stats = []
         for row in result:
-            efficiency = (row.completed / row.count_task * 100) if row.count_task != 0 else 100.0
+            efficiency = 100 - ((row.expired / row.count_task) * 100) if row.count_task != 0 else 100
+            efficiency = max(0, efficiency)
             employee_stat = {
                 "id": row.id,
                 "surname": row.surname,
@@ -139,7 +140,8 @@ class EmployeeRepository:
             logger.error(f"Failed to fetch employee {employee_id}: {str(e)}")
             raise
 
-        efficiency = (result.completed / result.count_task * 100) if result.count_task != 0 else 100.0
+        efficiency = 100 - ((result.expired / result.count_task) * 100) if result.count_task != 0 else 100
+        efficiency = max(0, efficiency)
         employee_stat = {
             "id": result.id,
             "surname": result.surname,
