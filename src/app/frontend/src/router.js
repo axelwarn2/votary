@@ -12,6 +12,7 @@ import RecordProjectTasks from "./components/steps/records/RecordProjectTasks.vu
 import FormAddEmployeeLink from "./components/steps/forms-add/FormAddEmployeeLink.vue";
 import FormAddEmployee from "./components/steps/forms-add/FormAddEmployee.vue";
 import TaskReport from "./components/steps/records/TaskReport.vue";
+import FormAddProject from "./components/steps/forms-add/FormAddProject.vue";
 import axios from "axios";
 
 const routes = [
@@ -93,6 +94,13 @@ const routes = [
         meta: { requiresAuth: true },
     },
     {
+        path: '/projects/:id/edit',
+        name: 'EditProject',
+        component: FormAddProject,
+        props: true,
+        meta: { requiresAuth: true },
+    },
+    {
         path: "/projects/:id/tasks",
         name: "RecordProjectTasks",
         component: RecordProjectTasks,
@@ -116,6 +124,12 @@ const routes = [
         path: "/add-employee",
         name: "FormAddEmployee",
         component: FormAddEmployee,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/add-project",
+        name: "FormAddProject",
+        component: FormAddProject,
         meta: { requiresAuth: true },
     },
 ];

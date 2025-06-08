@@ -14,6 +14,10 @@ class ProjectCreate(BaseModel):
     name: str
     description: Optional[str] = None
 
+class ProjectUpdate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
 class ProjectRead(BaseModel):
     id: int
     name: str
@@ -44,6 +48,27 @@ def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
         "description": new_project.description,
         "created_at": new_project.created_at,
         "updated_at": new_project.updated_at,
+        "completed_tasks": 0,
+        "incomplete_tasks": 0
+    }
+
+@router.put("/projects/{project_id}", response_model=ProjectRead)
+def update_project(project_id: int, project: ProjectUpdate, db: Session = Depends(get_db)):
+    repository = ProjectRepository(db)
+    existing_project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
+    if not existing_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if project.name != existing_project.name:
+        duplicate_project = db.query(ProjectModel).filter(ProjectModel.name == project.name).first()
+        if duplicate_project:
+            raise HTTPException(status_code=400, detail="Project with this name already exists")
+    updated_project = repository.update_project(project_id, project.name, project.description)
+    return {
+        "id": updated_project.id,
+        "name": updated_project.name,
+        "description": updated_project.description,
+        "created_at": updated_project.created_at,
+        "updated_at": updated_project.updated_at,
         "completed_tasks": 0,
         "incomplete_tasks": 0
     }

@@ -277,6 +277,11 @@ const toggleProject = (projectId) => {
       <button class="button__add-employee">Добавить сотрудника</button>
     </router-link>
   </div>
+  <div class="record-button__add-employee" v-if="isProjects">
+    <router-link to="/add-project" class="record-button__add-employee--link">
+      <button class="button__add-employee">Добавить проект</button>
+    </router-link>
+  </div>
 </template>
 
 <style scoped>
