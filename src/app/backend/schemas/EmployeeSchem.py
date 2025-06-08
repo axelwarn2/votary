@@ -51,3 +51,8 @@ class PasswordResetRequest(BaseModel):
     email: str
     password: str
     password_confirm: str
+
+class EmployeeStatusUpdate(BaseModel):
+    is_on_sick_leave: Optional[bool] = None
+    is_on_vacation: Optional[bool] = None
+    

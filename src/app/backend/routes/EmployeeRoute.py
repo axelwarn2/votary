@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Response, Cookie, HTTPException
-from backend.schemas.EmployeeSchem import EmployeeCreate, EmployeeStats, EmployeeLogin, PasswordResetRequest
+from backend.schemas.EmployeeSchem import EmployeeCreate, EmployeeStats, EmployeeLogin, PasswordResetRequest, EmployeeStatusUpdate
 from backend.schemas.InvitationRegister import InvitationCreate
 from backend.models.EmployeeModel import EmployeeModel
 from backend.services.EmailService import EmailService
@@ -37,6 +37,19 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="Employee not found")
     return {"message": "Employee deleted successfully"}
+
+@router.patch("/employees/{employee_id}/status")
+def update_employee_status(employee_id: int, status: EmployeeStatusUpdate, db: Session = Depends(get_db), session_id: Optional[str] = Cookie(None)):
+    user = get_current_user_from_session(session_id)
+    if user.get("role") != "руководитель":
+        raise HTTPException(status_code=403, detail="Only leaders can update employee status")
+    
+    repository = EmployeeRepository(db)
+    employee = repository.update_employee_status(employee_id, status.is_on_sick_leave, status.is_on_vacation)
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    return {"message": "Статус сотрудника обновлен"}
 
 @router.post("/login")
 def login(login_data: EmployeeLogin, response: Response, db: Session = Depends(get_db)):
