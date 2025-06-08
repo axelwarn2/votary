@@ -17,7 +17,6 @@ class EmployeeRepository:
             email=employee.email,
             password=bcrypt.hashpw(employee.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
             role=employee.role,
-            birth_date=employee.birth_date,
             is_on_sick_leave=False,
             is_on_vacation=False
         )
@@ -60,8 +59,7 @@ class EmployeeRepository:
                 "expired": row.expired,
                 "efficiency": f"{round(efficiency)}%",
                 "is_on_sick_leave": row.is_on_sick_leave,
-                "is_on_vacation": row.is_on_vacation, 
-                "birth_date": None,  
+                "is_on_vacation": row.is_on_vacation,
             }
             employees_stats.append(employee_stat)
 
@@ -110,7 +108,6 @@ class EmployeeRepository:
             "efficiency": f"{round(efficiency)}%",
             "is_on_sick_leave": result.is_on_sick_leave, 
             "is_on_vacation": result.is_on_vacation,    
-            "birth_date": None, 
         }
 
         efficiency_record = EmployeeEfficiencyModel(
@@ -136,12 +133,10 @@ class EmployeeRepository:
         self.db.commit()
         return employee
 
-    def update_employee_status(self, employee_id: int, birth_date=None, is_on_sick_leave=None, is_on_vacation=None):
+    def update_employee_status(self, employee_id: int, is_on_sick_leave=None, is_on_vacation=None):
         employee = self.db.query(EmployeeModel).filter(EmployeeModel.id == employee_id).first()
         if not employee:
             return None
-        if birth_date is not None:
-            employee.birth_date = birth_date
         if is_on_sick_leave is not None:
             employee.is_on_sick_leave = is_on_sick_leave
         if is_on_vacation is not None:

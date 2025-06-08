@@ -3,14 +3,16 @@ from backend.schemas.TaskSchem import TaskRead
 from sqlalchemy.orm import Session
 from backend.utlis.db import get_db
 from backend.repositories.TaskRepository import TaskRepository
+from typing import Optional
 
 router = APIRouter()
 
 @router.get("/tasks")
-def get_tasks(db: Session = Depends(get_db)):
+def get_tasks(status: Optional[str] = None, project_id: Optional[int] = None, db: Session = Depends(get_db)):
     repository = TaskRepository(db)
     try:
-        return repository.get_all_tasks()
+        tasks = repository.get_all_tasks(status=status, project_id=project_id)
+        return tasks
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

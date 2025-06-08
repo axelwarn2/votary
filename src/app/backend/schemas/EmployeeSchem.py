@@ -9,7 +9,6 @@ class EmployeeCreate(BaseModel):
     email: str
     password: str
     role: str
-    birth_date: Optional[date] = None
     is_on_sick_leave: Optional[bool] = False
     is_on_vacation: Optional[bool] = False
 
@@ -22,7 +21,6 @@ class EmployeeStats(BaseModel):
     complete: int
     expired: int
     efficiency: str
-    birth_date: Optional[date] = None
     is_on_sick_leave: Optional[bool] = False
     is_on_vacation: Optional[bool] = False
 

@@ -5,41 +5,61 @@ import axios from 'axios';
 
 const route = useRoute();
 const task = ref(null);
+const project = ref(null);
 
 onMounted(async () => {
     try {
-        const response = await axios.get(`http://localhost:8000/tasks/${route.params.id}`);
-        task.value = response.data;
+        const taskResponse = await axios.get(`http://localhost:8000/tasks/${route.params.id}`);
+        task.value = taskResponse.data;
+
+        if (task.value.project_id) {
+            const projectResponse = await axios.get(`http://localhost:8000/projects/${task.value.project_id}`);
+            project.value = projectResponse.data;
+        }
     } catch (error) {
-        console.error("Ошибка получения детальной информации задачи: ", error);
+        console.error("Ошибка получения данных: ", error);
     }
 });
 
 const date_created = computed(() => {
-    return new Date(task.value.date_created).toLocaleString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-    }).replace(',', '');
+    return task.value?.date_created
+        ? new Date(task.value.date_created).toLocaleString('ru-RU', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+          }).replace(',', '')
+        : 'N/A';
 });
 
 const date_deadline = computed(() => {
-    return new Date(task.value.deadline).toLocaleDateString('ru-RU');
+    return task.value?.deadline
+        ? new Date(task.value.deadline).toLocaleDateString('ru-RU')
+        : 'N/A';
 });
 
 const date_production = computed(() => {
-    return new Date(task.value.date_created).toLocaleDateString('ru-RU');
+    return task.value?.date_created
+        ? new Date(task.value.date_created).toLocaleDateString('ru-RU')
+        : 'N/A';
 });
 
 const responcible = computed(() => {
-    return `${task.value?.employee_surname} ${task.value?.employee_name}`;
-})
+    return task.value
+        ? `${task.value.employee_surname} ${task.value.employee_name}`
+        : 'N/A';
+});
 
 const leader = computed(() => {
-    return `${task.value?.leader_surname} ${task.value?.leader_name}`;
+    return task.value && task.value.leader_surname
+        ? `${task.value.leader_surname} ${task.value.leader_name}`
+        : 'N/A';
+});
+
+const projectName = computed(() => {
+    return project.value ? project.value.name : 'Без проекта';
 });
 </script>
 
@@ -57,7 +77,15 @@ const leader = computed(() => {
                 </div>
                 <div class="record-notes-detail__section record-notes-detail__section--download">
                     <p class="record-notes-detail__download-text">
-                        Задача в проекте: <a href="#" class="record-notes-detail__link">Модуль фильтрации</a>
+                        Задача в проекте:
+                        <router-link
+                            v-if="project"
+                            :to="`/projects/${task.project_id}`"
+                            class="record-notes-detail__link"
+                        >
+                            {{ projectName }}
+                        </router-link>
+                        <span v-else>Без проекта</span>
                     </p>
                 </div>
             </div>

@@ -7,6 +7,8 @@ import RecordLists from "./components/steps/records/RecordLists.vue";
 import RecordNotesDetail from "./components/steps/records/RecordNotesDetail.vue";
 import RecordTasksDetail from "./components/steps/records/RecordTasksDetail.vue";
 import RecordStatisticDetail from "./components/steps/records/RecordStatisticDetail.vue";
+import RecordProjectDetail from "./components/steps/records/RecordProjectDetail.vue";
+import RecordProjectTasks from "./components/steps/records/RecordProjectTasks.vue";
 import FormAddEmployeeLink from "./components/steps/forms-add/FormAddEmployeeLink.vue";
 import FormAddEmployee from "./components/steps/forms-add/FormAddEmployee.vue";
 import TaskReport from "./components/steps/records/TaskReport.vue";
@@ -38,21 +40,28 @@ const routes = [
         path: "/meetings",
         name: "RecordNotes",
         component: RecordLists,
-        props: { isTasks: false, isStatistics: false },
+        props: { isTasks: false, isStatistics: false, isProjects: false },
         meta: { requiresAuth: true },
     },
     {
         path: "/tasks",
         name: "RecordTasks",
         component: RecordLists,
-        props: { isTasks: true, isStatistics: false },
+        props: { isTasks: true, isStatistics: false, isProjects: false },
         meta: { requiresAuth: true },
     },
     {
         path: "/statistics",
         name: "RecordStatistics",
         component: RecordLists,
-        props: { isTasks: false, isStatistics: true },
+        props: { isTasks: false, isStatistics: true, isProjects: false },
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/projects",
+        name: "RecordProjects",
+        component: RecordLists,
+        props: { isTasks: false, isStatistics: false, isProjects: true },
         meta: { requiresAuth: true },
     },
     {
@@ -73,6 +82,20 @@ const routes = [
         path: "/statistics/:id",
         name: "RecordStatisticDetail",
         component: RecordStatisticDetail,
+        props: true,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/projects/:id",
+        name: "RecordProjectDetail",
+        component: RecordProjectDetail,
+        props: true,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/projects/:id/tasks",
+        name: "RecordProjectTasks",
+        component: RecordProjectTasks,
         props: true,
         meta: { requiresAuth: true },
     },

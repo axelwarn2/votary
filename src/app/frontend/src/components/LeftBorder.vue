@@ -14,6 +14,9 @@ export default {
         goToStatistics() {
             this.$router.push('/statistics');
         },
+        goToProjects() {
+            this.$router.push('/projects');
+        },
     },
     computed: {
         currentRoute() {
@@ -39,12 +42,17 @@ export default {
                 </li>
                 <li class="left-panel__item" @click="goToTasks" :class="{'isActive' : currentRoute === 'RecordTasks'}">
                     <div class="left-panel__item-image--note"></div>
-                    <button class="left-panel__item-text">Задачи</button>
+                    <button class="left-panel__item-text">Поручения</button>
                 </li>
                 <li class="left-panel__item" @click="goToStatistics"
                     :class="{'isActive' : currentRoute === 'RecordStatistics'}">
                     <div class="left-panel__item-image--graphic"></div>
                     <button class="left-panel__item-text">Статистика задач</button>
+                </li>
+                <li class="left-panel__item" @click="goToProjects"
+                    :class="{'isActive' : currentRoute === 'RecordProjects'}">
+                    <div class="left-panel__item-image--graphic"></div>
+                    <button class="left-panel__item-text">Проекты</button>
                 </li>
             </ul>
         </div>

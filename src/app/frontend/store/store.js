@@ -8,6 +8,7 @@ export default createStore({
         selectNote: null,
         selectedTask: null,
         selectedStatistic: null,
+        selectedProject: null,
         user: null,
         notesData: {
             title: "Записи собраний",
@@ -15,13 +16,22 @@ export default createStore({
             items: [],
         },
         taskData: {
-            title: "Задачи",
-            headers: ["Номер  задачи", "Исполнитель", "Дата создания", "Крайний срок"],
+            title: "Поручения",
+            headers: ["Номер поручения", "Исполнитель", "Дата создания", "Крайний срок"],
             items: []
         },
         statisticsData: {
             title: "Статистика задач",
             headers: ["Сотрудник", "Количество задач", "Завершено", "Просрочено", "Эффективность"],
+            items: []
+        },
+        projectsData: {
+            title: "Проекты",
+            headers: ["Название", "Количество завершенных задач", "Количество незавершенных задач"],
+            items: []
+        },
+        projectTasks: {
+            title: "Задачи проекта",
             items: []
         }
     },
@@ -41,6 +51,11 @@ export default createStore({
             state.viewHistory.push(state.currentView);
             state.currentView = "RecordStatisticDetail";
         },
+        selectProjects(state, project) {
+            state.selectedProject = project;
+            state.viewHistory.push(state.currentView);
+            state.currentView = "RecordProjectDetail";
+        },
         setMeetings(state, meetings) {
             state.notesData.items = meetings;
         },
@@ -48,7 +63,13 @@ export default createStore({
             state.taskData.items = tasks;
         },
         setStatistics(state, statistics) {
-            state.statisticsData.items = statistics
+            state.statisticsData.items = statistics;
+        },
+        setProjects(state, projects) {
+            state.projectsData.items = projects;
+        },
+        setProjectTasks(state, tasks) {
+            state.projectTasks.items = tasks;
         },
         setUser(state, user) {
             state.user = user;
@@ -95,12 +116,32 @@ export default createStore({
                 console.error('Ошибка при получении задач:', error);
             }
         },
+        async fetchProjectTasks({ commit }, projectId) {
+            try {
+                const response = await axios.get('http://localhost:8000/tasks', {
+                    params: { project_id: projectId }
+                });
+                commit('setProjectTasks', response.data);
+                return response.data;
+            } catch (error) {
+                console.error('Ошибка при получении задач проекта:', error);
+                throw error;
+            }
+        },
         async fetchStatistics({ commit }) {
             try {
                 const response = await axios.get('http://localhost:8000/employees');
                 commit('setStatistics', response.data);
             } catch (error) {
                 console.error('Ошибка при получении статистики:', error);
+            }
+        },
+        async fetchProjects({ commit }) {
+            try {
+                const response = await axios.get('http://localhost:8000/projects');
+                commit('setProjects', response.data);
+            } catch (error) {
+                console.error('Ошибка при получении проектов:', error);
             }
         }
     }
