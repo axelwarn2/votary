@@ -23,6 +23,9 @@ const tasks = ref([]);
 const employees = ref([]);
 const expandedProjects = ref({});
 const errorMessage = ref('');
+const showDeleteDialog = ref(false);
+const itemToDelete = ref(null);
+const deleteType = ref('');
 
 const loadData = async () => {
   isLoading.value = true;
@@ -31,7 +34,7 @@ const loadData = async () => {
     if (props.isTasks) {
       try {
         const employeeResponse = await axios.get('http://localhost:8000/employees');
-        console.log('Employees response:', employeeResponse.data); // Логирование для отладки
+        console.log('Employees response:', employeeResponse.data);
         employees.value = employeeResponse.data;
       } catch (err) {
         errorMessage.value = 'Ошибка загрузки сотрудников: ' + err.message;
@@ -45,7 +48,7 @@ const loadData = async () => {
       if (projectFilter.value) params.project_id = projectFilter.value;
       if (urgencyFilter.value) params.urgency = urgencyFilter.value === 'Приоритетная' ? 'да' : 'нет';
       const taskResponse = await axios.get('http://localhost:8000/tasks', { params });
-      console.log('Tasks response:', taskResponse.data); // Логирование для отладки
+      console.log('Tasks response:', taskResponse.data);
       tasks.value = taskResponse.data;
       store.commit('setTasks', taskResponse.data);
 
@@ -170,6 +173,42 @@ function calculateDuration(start, end) {
 const toggleProject = (projectId) => {
   expandedProjects.value[projectId] = !expandedProjects.value[projectId];
 };
+
+const openDeleteDialog = (item, type) => {
+  itemToDelete.value = item;
+  deleteType.value = type;
+  showDeleteDialog.value = true;
+};
+
+const closeDeleteDialog = () => {
+  showDeleteDialog.value = false;
+  itemToDelete.value = null;
+  deleteType.value = '';
+};
+
+const confirmDelete = async () => {
+  try {
+    if (deleteType.value === 'task') {
+      await axios.delete(`http://localhost:8000/tasks/${itemToDelete.value.id}`);
+      tasks.value = tasks.value.filter(task => task.id !== itemToDelete.value.id);
+      store.commit('setTasks', tasks.value);
+    } else if (deleteType.value === 'project') {
+      await axios.delete(`http://localhost:8000/projects/${itemToDelete.value.id}`);
+      projects.value = projects.value.filter(project => project.id !== itemToDelete.value.id);
+      store.commit('setProjects', projects.value);
+    } else if (deleteType.value === 'employee') {
+      await axios.delete(`http://localhost:8000/employees/${itemToDelete.value.id}`);
+      employees.value = employees.value.filter(employee => employee.id !== itemToDelete.value.id);
+      store.commit('setStatistics', employees.value);
+    }
+    closeDeleteDialog();
+    await loadData();
+  } catch (error) {
+    errorMessage.value = `Ошибка при удалении: ${error.response?.data?.detail || error.message}`;
+    console.error('Delete error:', error);
+    closeDeleteDialog();
+  }
+};
 </script>
 
 <template>
@@ -179,8 +218,7 @@ const toggleProject = (projectId) => {
     <div class="filters">
       <div v-if="props.isTasks" class="filters__group filters__group--employees">
         <p class="filters__label">Сотрудники</p>
-        <select v-model="employeeIdsFilter" class="filters__input filters__input--select 
-        filters__input--single-line">
+        <select v-model="employeeIdsFilter" class="filters__input filters__input--select filters__input--single-line">
           <option value="" class="filters__option">Все сотрудники</option>
           <option v-for="employee in employees" :key="employee.id" :value="employee.id" class="filters__option">
             {{ employee.surname }} {{ employee.name }}
@@ -223,6 +261,7 @@ const toggleProject = (projectId) => {
         <p v-for="(header, index) in headers" :key="index" class="record-notes__header-item">
           {{ header }}
         </p>
+        <span class="record-notes__header-item record-notes__actions"></span>
       </div>
       <div v-if="props.isTasks" class="record-notes__list">
         <div v-for="(project, projectId) in tasksByProject" :key="projectId" class="project-group">
@@ -236,15 +275,21 @@ const toggleProject = (projectId) => {
               :key="task.id"
               class="record-notes__item"
               :class="{ 'priority-task': task.urgency === 'да', 'non-priority-task': task.urgency === 'нет' }"
-              @click="selectItem(task)"
             >
-              <p
-                v-for="(value, index) in getItemValues(task)"
-                :key="index"
-                class="record-notes__item-text"
-              >
-                {{ value }}
-              </p>
+              <div class="record-notes__item-content" @click="selectItem(task)">
+                <p
+                  v-for="(value, index) in getItemValues(task)"
+                  :key="index"
+                  class="record-notes__item-text"
+                >
+                  {{ value }}
+                </p>
+              </div>
+              <button class="record-notes__delete-btn" @click.stop="openDeleteDialog(task, 'task')">
+                <svg class="delete-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m-8 0h8m-10 4v10a2 2 0 002 2h6a2 2 0 002-2V10m-7 7v-7m4 7v-7"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -254,34 +299,59 @@ const toggleProject = (projectId) => {
           <p v-for="(header, index) in headers" :key="index" class="record-notes__header-item">
             {{ header }}
           </p>
+          <span v-if="props.isProjects || props.isStatistics" class="record-notes__header-item record-notes__actions"></span>
         </div>
         <div
           v-for="(item, index) in items"
           :key="index"
           class="record-notes__item"
-          @click="selectItem(item)"
         >
-          <p
-            v-for="(value, key) in getItemValues(item)"
-            :key="key"
-            class="record-notes__item-text"
+          <div class="record-notes__item-content" @click="selectItem(item)">
+            <p
+              v-for="(value, key) in getItemValues(item)"
+              :key="key"
+              class="record-notes__item-text"
+            >
+              {{ value }}
+            </p>
+          </div>
+          <button
+            v-if="props.isProjects || props.isStatistics"
+            class="record-notes__delete-btn"
+            @click.stop="openDeleteDialog(item, props.isProjects ? 'project' : 'employee')"
           >
-            {{ value }}
-          </p>
+            <svg class="delete-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m-8 0h8m-10 4v10a2 2 0 002 2h6a2 2 0 002-2V10m-7 7v-7m4 7v-7"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
   </div>
-  <div class="record-button__add-employee" v-if="isStatistics">
+  <div class="record-button__add-employee" v-if="props.isStatistics">
     <router-link to="/add-employee-link" class="record-button__add-employee--link">
       <button class="button__add-employee">Добавить сотрудника</button>
     </router-link>
   </div>
-  <div class="record-button__add-employee" v-if="isProjects">
+  <div class="record-button__add-employee" v-if="props.isProjects">
     <router-link to="/add-project" class="record-button__add-employee--link">
       <button class="button__add-employee">Добавить проект</button>
     </router-link>
   </div>
+  <dialog class="delete-dialog" v-if="showDeleteDialog" open>
+    <div class="delete-dialog__content">
+      <h3 class="delete-dialog__title">Подтверждение удаления</h3>
+      <p class="delete-dialog__message">
+        Вы уверены, что хотите удалить
+        {{ deleteType === 'task' ? 'поручение' : deleteType === 'project' ? 'проект' : 'сотрудника' }}
+        {{ deleteType === 'task' ? `#${itemToDelete?.id}` : deleteType === 'project' ? itemToDelete?.name : `${itemToDelete?.surname} ${itemToDelete?.name}` }}?
+      </p>
+      <div class="delete-dialog__buttons">
+        <button class="delete-dialog__btn delete-dialog__btn--confirm" @click="confirmDelete">Удалить</button>
+        <button class="delete-dialog__btn delete-dialog__btn--cancel" @click="closeDeleteDialog">Отмена</button>
+      </div>
+    </div>
+  </dialog>
 </template>
 
 <style scoped>
@@ -339,28 +409,108 @@ const toggleProject = (projectId) => {
   width: 100%;
   gap: 3%;
 }
-
 .filters__group {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
-
 .filters__label {
   font-weight: 600;
 }
-
 .filters__group--employees {
   width: 20%;
 }
-
 .filters__period {
   display: flex;
   gap: 10px;
 }
-
 .filters__period-item {
   display: flex;
   gap: 10px;
+}
+.record-notes__actions {
+  width: 40px;
+}
+.record-notes__item {
+  display: flex;
+  align-items: center;
+}
+.record-notes__item-content {
+  display: flex;
+  flex: 1;
+}
+.record-notes__delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #dc3545;
+}
+.delete-icon {
+  width: 20px;
+  height: 20px;
+}
+.record-notes__delete-btn:hover .delete-icon {
+  color: #b02a37;
+}
+.delete-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: rgba(128, 128, 128, 0.5);
+  border: none;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.delete-dialog__content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.delete-dialog__title {
+  font-size: 20px;
+  margin: 0;
+}
+.delete-dialog__message {
+  margin: 0;
+}
+.delete-dialog__buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+}
+.delete-dialog__btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.delete-dialog__btn--confirm {
+  background-color: #dc3545;
+  color: white;
+}
+.delete-dialog__btn--confirm:hover {
+  background-color: #b02a37;
+}
+.delete-dialog__btn--cancel {
+  background-color: #6c757d;
+  color: white;
+}
+.delete-dialog__btn--cancel:hover {
+  background-color: #5a6268;
 }
 </style>

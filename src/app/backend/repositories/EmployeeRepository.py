@@ -35,6 +35,14 @@ class EmployeeRepository:
             raise
         return new_employee
 
+    def delete_employee(self, employee_id: int):
+        employee = self.db.query(EmployeeModel).filter(EmployeeModel.id == employee_id).first()
+        if not employee:
+            return False
+        self.db.delete(employee)
+        self.db.commit()
+        return True
+
     def get_all_employees(self):
         logger.info("Fetching all employees")
         current_date = date.today()
@@ -209,3 +217,4 @@ class EmployeeRepository:
             logger.error(f"Failed to update status for employee {employee_id}: {str(e)}")
             raise
         return employee
+    

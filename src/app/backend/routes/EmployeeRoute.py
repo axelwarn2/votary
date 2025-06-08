@@ -30,6 +30,14 @@ def get_employee(employee_id: int, db: Session = Depends(get_db)):
     repository = EmployeeRepository(db)
     return repository.get_employee_by_id(employee_id)
 
+@router.delete("/employees/{employee_id}")
+def delete_employee(employee_id: int, db: Session = Depends(get_db)):
+    repository = EmployeeRepository(db)
+    success = repository.delete_employee(employee_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return {"message": "Employee deleted successfully"}
+
 @router.post("/login")
 def login(login_data: EmployeeLogin, response: Response, db: Session = Depends(get_db)):
     return login_in_program(login_data, response, db)

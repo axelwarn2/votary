@@ -26,6 +26,14 @@ class ProjectRepository:
         self.db.refresh(project)
         return project
 
+    def delete_project(self, project_id: int):
+        project = self.db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
+        if not project:
+            return False
+        self.db.delete(project)
+        self.db.commit()
+        return True
+
     def get_all_projects(self):
         stmt = (
             select(

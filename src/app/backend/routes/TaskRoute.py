@@ -38,6 +38,14 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
     repository = TaskRepository(db)
     return repository.get_task_by_id(task_id)
 
+@router.delete("/tasks/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    repository = TaskRepository(db)
+    success = repository.delete_task(task_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"message": "Task deleted successfully"}
+
 @router.get("/tasks/{task_id}/complete")
 def complete_task(task_id: int, db: Session = Depends(get_db)):
     repository = TaskRepository(db)

@@ -94,3 +94,11 @@ def update_task_status(task_id: int, status_update: TaskStatusUpdate, db: Sessio
         "id": task.id,
         "status": task.status
     }
+
+@router.delete("/projects/{project_id}")
+def delete_project(project_id: int, db: Session = Depends(get_db)):
+    repository = ProjectRepository(db)
+    success = repository.delete_project(project_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {"message": "Project deleted successfully"}
