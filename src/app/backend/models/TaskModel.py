@@ -1,21 +1,25 @@
 import enum
+from sqlalchemy import Column, Integer, String, TIMESTAMP, DateTime, Enum, ForeignKey
 from backend.utlis.db import Base
-from sqlalchemy import Column, Integer, TIMESTAMP, String, Enum, ForeignKey
 
 class StatusEnum(str, enum.Enum):
     выполняется = "выполняется"
     выполнена = "выполнена"
 
+class UrgencyEnum(str, enum.Enum):
+    да = "да"
+    нет = "нет"
+
 class TaskModel(Base):
     __tablename__ = "Task"
 
-    id = Column(Integer, primary_key=True, index=True)
-    date_created = Column(TIMESTAMP, nullable=False)
-    deadline = Column(TIMESTAMP, nullable=True)
-    description = Column(String(1000), nullable=False)
-    status = Column(Enum(StatusEnum), nullable=False)
-    employee_id = Column(Integer, ForeignKey("Employee.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    meeting_id = Column(Integer, ForeignKey("Meeting.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    leader_id = Column(Integer, ForeignKey("Employee.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    project_id = Column(Integer, ForeignKey("Project.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
-    
+    id = Column(Integer, primary_key=True, index=True, comment="Идентификатор поручения")
+    date_created = Column(TIMESTAMP, nullable=False, default="CURRENT_TIMESTAMP", comment="Дата создания")
+    deadline = Column(DateTime, comment="Срок выполнения")
+    description = Column(String(1000), nullable=False, comment="Описание")
+    status = Column(Enum(StatusEnum), nullable=False, comment="Статус")
+    urgency = Column(Enum(UrgencyEnum), nullable=False, default="нет", comment="Срочность")
+    employee_id = Column(Integer, ForeignKey("Employee.id", ondelete="CASCADE"), nullable=False, comment="Сотрудник (исполнитель)")
+    meeting_id = Column(Integer, ForeignKey("Meeting.id", ondelete="CASCADE"), nullable=False, comment="Собрание")
+    leader_id = Column(Integer, ForeignKey("Employee.id", ondelete="CASCADE"), nullable=False, comment="Сотрудник (руководитель)")
+    project_id = Column(Integer, ForeignKey("Project.id", ondelete="SET NULL"), comment="Проект")

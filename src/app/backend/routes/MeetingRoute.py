@@ -9,9 +9,13 @@ import os
 router = APIRouter()
 
 @router.get("/meetings", response_model=list[MeetingRead])
-def get_meetings(db: Session = Depends(get_db)):
+def get_meetings(
+    date_from: str = None,
+    date_to: str = None,
+    db: Session = Depends(get_db)
+):
     repository = MeetingRepository(db)
-    return repository.get_all_meetings()
+    return repository.get_all_meetings(date_from=date_from, date_to=date_to)
 
 @router.get("/meetings/{meeting_id}", response_model=MeetingRead)
 def get_meeting(meeting_id: int, db: Session = Depends(get_db)):

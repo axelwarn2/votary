@@ -2,8 +2,12 @@ from backend.models.EmployeeModel import EmployeeModel
 from backend.models.TaskModel import TaskModel, StatusEnum
 from backend.models.EmployeeEfficiencyModel import EmployeeEfficiencyModel
 from sqlalchemy import select, func, case
-from datetime import date
+from datetime import date, datetime
 import bcrypt
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class EmployeeRepository:
     def __init__(self, db):
@@ -21,13 +25,18 @@ class EmployeeRepository:
             is_on_vacation=False
         )
 
-        self.db.add(new_employee)
-        self.db.commit()
-        self.db.refresh(new_employee)
-
+        try:
+            self.db.add(new_employee)
+            self.db.commit()
+            self.db.refresh(new_employee)
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to create employee: {str(e)}")
+            raise
         return new_employee
 
     def get_all_employees(self):
+        logger.info("Fetching all employees")
         current_date = date.today()
         stmt = (
             select(
@@ -38,24 +47,28 @@ class EmployeeRepository:
                 EmployeeModel.is_on_sick_leave,
                 EmployeeModel.is_on_vacation,
                 func.count(TaskModel.id).label("count_task"),
-                func.sum(case((TaskModel.status == StatusEnum.выполнена, 1), else_=0)).label("complete"),
+                func.sum(case((TaskModel.status == StatusEnum.выполнена, 1), else_=0)).label("completed"),
                 func.sum(case((TaskModel.deadline < current_date, 1), else_=0)).label("expired"),
             )
             .outerjoin(TaskModel, EmployeeModel.id == TaskModel.employee_id)
             .group_by(EmployeeModel.id, EmployeeModel.surname, EmployeeModel.name, EmployeeModel.email, EmployeeModel.is_on_sick_leave, EmployeeModel.is_on_vacation)
         )
-        result = self.db.execute(stmt).all()
+        try:
+            result = self.db.execute(stmt).all()
+        except Exception as e:
+            logger.error(f"Failed to fetch employees: {str(e)}")
+            raise
 
         employees_stats = []
         for row in result:
-            efficiency = (row.complete / row.count_task * 100) if row.count_task != 0 else 100.0
+            efficiency = (row.completed / row.count_task * 100) if row.count_task != 0 else 100.0
             employee_stat = {
                 "id": row.id,
                 "surname": row.surname,
                 "name": row.name,
                 "email": row.email,
                 "count_task": row.count_task,
-                "complete": row.complete,
+                "completed": row.completed,
                 "expired": row.expired,
                 "efficiency": f"{round(efficiency)}%",
                 "is_on_sick_leave": row.is_on_sick_leave,
@@ -63,19 +76,38 @@ class EmployeeRepository:
             }
             employees_stats.append(employee_stat)
 
-            efficiency_record = EmployeeEfficiencyModel(
-                employee_id=row.id,
-                efficiency=efficiency,
-                count_task=row.count_task,
-                complete=row.complete,
-                expired=row.expired
-            )
-            self.db.add(efficiency_record)
+            existing_record = self.db.query(EmployeeEfficiencyModel).filter(
+                EmployeeEfficiencyModel.employee_id == row.id
+            ).first()
+            if existing_record:
+                existing_record.efficiency = efficiency
+                existing_record.count_task = row.count_task
+                existing_record.completed = row.completed
+                existing_record.expired = row.expired
+                existing_record.calculated_at = datetime.utcnow()
+            else:
+                efficiency_record = EmployeeEfficiencyModel(
+                    employee_id=row.id,
+                    efficiency=efficiency,
+                    count_task=row.count_task,
+                    completed=row.completed,
+                    expired=row.expired,
+                    calculated_at=datetime.utcnow()
+                )
+                self.db.add(efficiency_record)
 
-        self.db.commit()
+        try:
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to commit employee efficiency: {str(e)}")
+            raise
+
+        logger.info(f"Returning {len(employees_stats)} employees")
         return sorted(employees_stats, key=lambda x: x["id"])
 
     def get_employee_by_id(self, employee_id):
+        logger.info(f"Fetching employee with id={employee_id}")
         current_date = date.today()
         stmt = (
             select(
@@ -83,54 +115,83 @@ class EmployeeRepository:
                 EmployeeModel.surname,
                 EmployeeModel.name,
                 EmployeeModel.email,
-                EmployeeModel.is_on_sick_leave, 
-                EmployeeModel.is_on_vacation,   
+                EmployeeModel.is_on_sick_leave,
+                EmployeeModel.is_on_vacation,
                 func.count(TaskModel.id).label("count_task"),
-                func.sum(case((TaskModel.status == StatusEnum.выполнена, 1), else_=0)).label("complete"),
+                func.sum(case((TaskModel.status == StatusEnum.выполнена, 1), else_=0)).label("completed"),
                 func.sum(case((TaskModel.deadline < current_date, 1), else_=0)).label("expired"),
             )
             .outerjoin(TaskModel, EmployeeModel.id == TaskModel.employee_id)
             .where(EmployeeModel.id == employee_id)
             .group_by(EmployeeModel.id, EmployeeModel.surname, EmployeeModel.name, EmployeeModel.email, EmployeeModel.is_on_sick_leave, EmployeeModel.is_on_vacation)
         )
-        result = self.db.execute(stmt).first()
+        try:
+            result = self.db.execute(stmt).first()
+        except Exception as e:
+            logger.error(f"Failed to fetch employee {employee_id}: {str(e)}")
+            raise
 
-
-        efficiency = (result.complete / result.count_task * 100) if result.count_task != 0 else 100.0  
+        efficiency = (result.completed / result.count_task * 100) if result.count_task != 0 else 100.0
         employee_stat = {
             "id": result.id,
             "surname": result.surname,
             "name": result.name,
             "email": result.email,
             "count_task": result.count_task,
-            "complete": result.complete,
+            "completed": result.completed,
             "expired": result.expired,
             "efficiency": f"{round(efficiency)}%",
-            "is_on_sick_leave": result.is_on_sick_leave, 
-            "is_on_vacation": result.is_on_vacation,    
+            "is_on_sick_leave": result.is_on_sick_leave,
+            "is_on_vacation": result.is_on_vacation,
         }
 
-        efficiency_record = EmployeeEfficiencyModel(
-            employee_id=result.id,
-            efficiency=efficiency,
-            count_task=result.count_task,
-            complete=result.complete,
-            expired=result.expired
-        )
-        self.db.add(efficiency_record)
-        self.db.commit()
+        existing_record = self.db.query(EmployeeEfficiencyModel).filter(
+            EmployeeEfficiencyModel.employee_id == result.id
+        ).first()
+        if existing_record:
+            existing_record.efficiency = efficiency
+            existing_record.count_task = result.count_task
+            existing_record.completed = result.completed
+            existing_record.expired = result.expired
+            existing_record.calculated_at = datetime.utcnow()
+        else:
+            efficiency_record = EmployeeEfficiencyModel(
+                employee_id=result.id,
+                efficiency=efficiency,
+                count_task=result.count_task,
+                completed=result.completed,
+                expired=result.expired,
+                calculated_at=datetime.utcnow()
+            )
+            self.db.add(efficiency_record)
+
+        try:
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to commit employee efficiency: {str(e)}")
+            raise
 
         return employee_stat
 
     def get_employee_by_email(self, email: str):
-        return self.db.query(EmployeeModel).filter(EmployeeModel.email == email).first()
+        try:
+            return self.db.query(EmployeeModel).filter(EmployeeModel.email == email).first()
+        except Exception as e:
+            logger.error(f"Failed to fetch employee by email {email}: {str(e)}")
+            raise
 
     def update_employee_password(self, employee_id: int, new_password: str):
         employee = self.db.query(EmployeeModel).filter(EmployeeModel.id == employee_id).first()
         if not employee:
             return None
         employee.password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        self.db.commit()
+        try:
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to update password for employee {employee_id}: {str(e)}")
+            raise
         return employee
 
     def update_employee_status(self, employee_id: int, is_on_sick_leave=None, is_on_vacation=None):
@@ -141,6 +202,10 @@ class EmployeeRepository:
             employee.is_on_sick_leave = is_on_sick_leave
         if is_on_vacation is not None:
             employee.is_on_vacation = is_on_vacation
-        self.db.commit()
+        try:
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to update status for employee {employee_id}: {str(e)}")
+            raise
         return employee
-    

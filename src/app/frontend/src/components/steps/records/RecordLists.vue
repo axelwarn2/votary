@@ -13,22 +13,39 @@ const props = defineProps({
 const store = useStore();
 const router = useRouter();
 const isLoading = ref(false);
-const employeeNameFilter = ref('');
-const dateFilter = ref('');
+const employeeIdsFilter = ref([]);
+const dateFromFilter = ref('');
+const dateToFilter = ref('');
 const projectFilter = ref(null);
+const urgencyFilter = ref('');
 const projects = ref([]);
 const tasks = ref([]);
-const expandedProjects = ref({}); // Состояние раскрытых проектов
+const employees = ref([]);
+const expandedProjects = ref({});
+const errorMessage = ref('');
 
 const loadData = async () => {
   isLoading.value = true;
+  errorMessage.value = '';
   try {
     if (props.isTasks) {
+      try {
+        const employeeResponse = await axios.get('http://localhost:8000/employees');
+        console.log('Employees response:', employeeResponse.data); // Логирование для отладки
+        employees.value = employeeResponse.data;
+      } catch (err) {
+        errorMessage.value = 'Ошибка загрузки сотрудников: ' + err.message;
+        console.error('Employee fetch error:', err);
+      }
+
       const params = {};
-      if (employeeNameFilter.value) params.employee_name = employeeNameFilter.value;
-      if (dateFilter.value) params.date_filter = dateFilter.value;
+      if (employeeIdsFilter.value.length) params.employee_ids = employeeIdsFilter.value.join(',');
+      if (dateFromFilter.value) params.date_from = dateFromFilter.value;
+      if (dateToFilter.value) params.date_to = dateToFilter.value;
       if (projectFilter.value) params.project_id = projectFilter.value;
+      if (urgencyFilter.value) params.urgency = urgencyFilter.value === 'Приоритетная' ? 'да' : 'нет';
       const taskResponse = await axios.get('http://localhost:8000/tasks', { params });
+      console.log('Tasks response:', taskResponse.data); // Логирование для отладки
       tasks.value = taskResponse.data;
       store.commit('setTasks', taskResponse.data);
 
@@ -39,8 +56,15 @@ const loadData = async () => {
     } else if (props.isProjects) {
       await store.dispatch('fetchProjects');
     } else {
-      await store.dispatch('fetchMeetings');
+      const params = {};
+      if (dateFromFilter.value) params.date_from = dateFromFilter.value;
+      if (dateToFilter.value) params.date_to = dateToFilter.value;
+      const meetingResponse = await axios.get('http://localhost:8000/meetings', { params });
+      store.commit('setMeetings', meetingResponse.data);
     }
+  } catch (err) {
+    errorMessage.value = 'Ошибка загрузки данных: ' + err.message;
+    console.error('Load data error:', err);
   } finally {
     isLoading.value = false;
   }
@@ -49,13 +73,13 @@ const loadData = async () => {
 onMounted(loadData);
 
 watch(
-  () => [props.isTasks, props.isStatistics, props.isProjects, employeeNameFilter.value, dateFilter.value, projectFilter.value],
+  () => [props.isTasks, props.isStatistics, props.isProjects, employeeIdsFilter.value, dateFromFilter.value, dateToFilter.value, projectFilter.value, urgencyFilter.value],
   () => {
     loadData();
-  }
+  },
+  { deep: true }
 );
 
-// Группировка задач по проектам
 const tasksByProject = computed(() => {
   const grouped = {};
   projects.value.forEach(project => {
@@ -64,7 +88,6 @@ const tasksByProject = computed(() => {
       tasks: tasks.value.filter(task => task.project_id === project.id),
     };
   });
-  // Добавляем задачи без проекта
   grouped['no_project'] = {
     name: 'Без проекта',
     tasks: tasks.value.filter(task => !task.project_id),
@@ -112,7 +135,7 @@ const selectItem = (item) => {
 const getItemValues = (item) => {
   if (props.isStatistics) {
     const name = `${item.surname} ${item.name}`;
-    return [name, item.count_task, item.complete, item.expired, item.efficiency];
+    return [name, item.count_task, item.completed, item.expired, item.efficiency];
   } else if (props.isTasks) {
     const date_created = item.date_created ? new Date(item.date_created).toLocaleDateString('ru-RU') : 'N/A';
     const deadline = item.deadline ? new Date(item.deadline).toLocaleDateString('ru-RU') : 'N/A';
@@ -144,7 +167,6 @@ function calculateDuration(start, end) {
   }
 }
 
-// Переключение состояния раскрытия проекта
 const toggleProject = (projectId) => {
   expandedProjects.value[projectId] = !expandedProjects.value[projectId];
 };
@@ -153,14 +175,55 @@ const toggleProject = (projectId) => {
 <template>
   <div class="record-notes">
     <h3 class="record-notes__title">{{ title }}</h3>
+    <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+    <div class="filters">
+      <div v-if="props.isTasks" class="filters__group filters__group--employees">
+        <p class="filters__label">Сотрудники</p>
+        <select v-model="employeeIdsFilter" class="filters__input filters__input--select 
+        filters__input--single-line">
+          <option value="" class="filters__option">Все сотрудники</option>
+          <option v-for="employee in employees" :key="employee.id" :value="employee.id" class="filters__option">
+            {{ employee.surname }} {{ employee.name }}
+          </option>
+        </select>
+      </div>
+      <div class="filters__group filters__group--period">
+        <p class="filters__label">Период</p>
+        <div class="filters__period">
+          <div class="filters__period-item">
+            <p class="filters__sublabel">От:</p>
+            <input type="date" v-model="dateFromFilter" class="filters__input filters__input--date">
+          </div>
+          <div class="filters__period-item">
+            <p class="filters__sublabel">До:</p>
+            <input type="date" v-model="dateToFilter" class="filters__input filters__input--date">
+          </div>
+        </div>
+      </div>
+      <div v-if="props.isTasks" class="filters__group filters__group--project">
+        <p class="filters__label">Проект</p>
+        <select v-model="projectFilter" class="filters__input filters__input--select">
+          <option :value="null" class="filters__option">Все проекты</option>
+          <option v-for="project in projects" :key="project.id" :value="project.id" class="filters__option">
+            {{ project.name }}
+          </option>
+        </select>
+      </div>
+      <div v-if="props.isTasks" class="filters__group filters__group--urgency">
+        <p class="filters__label">Приоритетность</p>
+        <select v-model="urgencyFilter" class="filters__input filters__input--select">
+          <option value="" class="filters__option">Все задачи</option>
+          <option value="Приоритетная" class="filters__option">Приоритетная</option>
+          <option value="Не приоритетная" class="filters__option">Не приоритетная</option>
+        </select>
+      </div>
+    </div>
     <div class="record-notes__content">
-      <!-- Заголовок таблицы для задач -->
       <div v-if="props.isTasks" class="record-notes__header">
         <p v-for="(header, index) in headers" :key="index" class="record-notes__header-item">
           {{ header }}
         </p>
       </div>
-      <!-- Список задач, сгруппированный по проектам -->
       <div v-if="props.isTasks" class="record-notes__list">
         <div v-for="(project, projectId) in tasksByProject" :key="projectId" class="project-group">
           <div class="project-header" @click="toggleProject(projectId)">
@@ -172,6 +235,7 @@ const toggleProject = (projectId) => {
               v-for="task in project.tasks"
               :key="task.id"
               class="record-notes__item"
+              :class="{ 'priority-task': task.urgency === 'да', 'non-priority-task': task.urgency === 'нет' }"
               @click="selectItem(task)"
             >
               <p
@@ -185,7 +249,6 @@ const toggleProject = (projectId) => {
           </div>
         </div>
       </div>
-      <!-- Обычный список для других типов данных -->
       <div v-else class="record-notes__list">
         <div class="record-notes__header">
           <p v-for="(header, index) in headers" :key="index" class="record-notes__header-item">
@@ -199,8 +262,8 @@ const toggleProject = (projectId) => {
           @click="selectItem(item)"
         >
           <p
-            v-for="(value, index) in getItemValues(item)"
-            :key="index"
+            v-for="(value, key) in getItemValues(item)"
+            :key="key"
             class="record-notes__item-text"
           >
             {{ value }}
@@ -250,5 +313,49 @@ const toggleProject = (projectId) => {
 .record-button__add-employee {
   margin-top: 20px;
   text-align: center;
+}
+.priority-task {
+  position: relative;
+  border: 2px solid #ffd700;
+}
+.priority-task::before {
+  content: '★';
+  position: absolute;
+  top: -6px;
+  right: 6px;
+  color: #ffd700;
+  font-size: 20px;
+}
+.non-priority-task {
+  border: 1px solid #ccc;
+}
+.filters {
+  display: flex;
+  width: 100%;
+  gap: 3%;
+}
+
+.filters__group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.filters__label {
+  font-weight: 600;
+}
+
+.filters__group--employees {
+  width: 20%;
+}
+
+.filters__period {
+  display: flex;
+  gap: 10px;
+}
+
+.filters__period-item {
+  display: flex;
+  gap: 10px;
 }
 </style>
